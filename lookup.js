@@ -7,18 +7,14 @@ var PADDING_TOP = 15;
 var PADDING_BOTTOM = 15;
 var PADDING_FORM = 10;
 var BASE_Z_INDEX = 65000;
+var QUERY_FORM_HEIGHT = 50;
 
 // URL constants.
-var EXTERN_LINK_TEMPLATE = 'http://www.google.com/dictionary?langpair=%src_lang%|%dst_lang%&q=%query%';
-var SPEAKER_ICON_URL = chrome.extension.getURL('speaker.png');
-var GOOGLE_ICON_URL = chrome.extension.getURL('google4.png');
 var HANDLE_ICON_URL = chrome.extension.getURL('handle.png');
 var BACK_ICON_URL = chrome.extension.getURL('back.png');
 var LOADER_ICON_URL = chrome.extension.getURL('loader.gif');
 var GRADIENT_DOWN_URL = chrome.extension.getURL('gradient_down.png');
 var GRADIENT_UP_URL = chrome.extension.getURL('gradient_up.png');
-var STARRED_ICON_URL = chrome.extension.getURL('starred.gif');
-var UNSTARRED_ICON_URL = chrome.extension.getURL('unstarred.gif');
 
 // Internal global vars.
 var body = document.getElementsByTagName('body')[0];
@@ -35,15 +31,8 @@ var options = {
   frameWidth: 550,
   frameHeight: 250,
   queryFormWidth: 250,
-  queryFormHeight: 50,  // This one is an approximation for centering.
   hideWithEscape: true,
-  saveFrameSize: true,
-  showStar: true,
-  showLabels: false,
-  showConjugates: false,
-  showWebDefinitions: true,
-  showSynonyms: false,
-  showRelated: false
+  saveFrameSize: true
 }
 
 /***************************************************************
@@ -160,7 +149,7 @@ function navigateFrame(query) {
 function createQueryForm() {
   // Calculate the coordinates of the middle of the window.
   var windowX = (window.innerWidth - (PADDING_LEFT + options.queryFormWidth + PADDING_RIGHT)) / 2 ;
-  var windowY = (window.innerHeight - (PADDING_TOP + options.queryFormHeight + PADDING_BOTTOM)) / 2;
+  var windowY = (window.innerHeight - (PADDING_TOP + QUERY_FORM_HEIGHT + PADDING_BOTTOM)) / 2;
   var x = body.scrollLeft + windowX;
   var y = body.scrollTop + windowY;
   
@@ -252,7 +241,7 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
   // Start loading frame data.
   chrome.extension.sendRequest({method: 'lookup', arg: query}, function(response) {
     if (response != null) {
-      frame.innerHTML = createHtmlFromLookup(response);
+      frame.innerHTML = createHtmlFromLookup(query, response);
 
       // Add some dynamic element after the HTML is loaded.
       setTimeout(function() {
@@ -288,6 +277,7 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
         }
         
         // Hook into dictionary links.
+        // TODO: remove this once we're sure it's no longer needed.
         dict_link_class = new RegExp('\\b' + ROOT_ID + '_dict_link\\b');
         links = frame.getElementsByTagName('a');
         for (var i in links) {
@@ -298,27 +288,6 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
                 navigateFrame(this.innerText);
                 e.preventDefault();
               }
-            });
-          }
-        }
-        
-        // Hook into starring icon.
-        if (options.showStar) {
-          var star = document.getElementById(ROOT_ID + '_star');
-          if (star) {
-            star.addEventListener('click', function() {
-              var operation = (this.src == UNSTARRED_ICON_URL) ? 'star': 'unstar';
-              var star_image = this;
-              
-              chrome.extension.sendRequest({method: operation, arg: last_query}, function(response) {
-                if (response) {
-                  if (operation == 'star') {
-                    star_image.src = STARRED_ICON_URL;
-                  } else {
-                    star_image.src = UNSTARRED_ICON_URL;
-                  }
-                }
-              });
             });
           }
         }
@@ -393,302 +362,32 @@ function removePopup(do_frame, do_form) {
   }
 }
 
-function createHtmlFromLookup(dict_entry) {
+function createHtmlFromLookup(query, response) {
   var buffer = [];
-  var audio_index = 0;
-  
-  function getAudioHtml(url) {
-    var audio_id = ROOT_ID + '_audio_' + audio_index++;
-    var action = "document.getElementById('" + audio_id + "').play()";
-    return '<img class="' + ROOT_ID + '_speaker" src="' + SPEAKER_ICON_URL + '" title="Listen" onclick="' + action + '" /><audio id="' + audio_id + '" src="' + url + '" autobuffer></audio>';
-  }
   
   buffer.push('<div id="' + ROOT_ID + '_content">');
-  
-  // Google Dictionary link.
-  var extern_link = EXTERN_LINK_TEMPLATE;
-  extern_link = extern_link.replace('%src_lang%', dict_entry.sourceLanguage);
-  extern_link = extern_link.replace('%dst_lang%', dict_entry.targetLanguage);
-  extern_link = extern_link.replace('%query%', dict_entry.query);
-  buffer.push('<a id="' + ROOT_ID + '_logo" href="' + extern_link + '" target="_blank">');
-  buffer.push('<img src="' + GOOGLE_ICON_URL + '" />');
-  buffer.push('powered<br />by');
-  buffer.push('</a>');
-  
-  dict_entry.primaries = dict_entry.primaries || [];
-  dict_entry.webDefinitions = dict_entry.webDefinitions || [];
-  if (dict_entry.primaries.length == 0 && dict_entry.webDefinitions.length == 0) {
-    buffer.push('<div style="display: table; padding-top: 3em; width: 100%;"><div style="display: table-cell; text-align: center; vertical-align: middle;">No definitions for <b>' + dict_entry.query + '</b>.</div></div>');
-  } else {
-    // A recursive function to traverse the definitions/examples tree.
-    function processEntry(entry, level) {
-      var type = entry.type;
-      var terms = entry.terms || [];
-      var children = entry.entries || [];
-      
-      switch (type) {
-        case 'container':
-          if (entry.labels && entry.labels[0] && entry.labels[0].text) {
-            buffer.push('</ol>');
-            buffer.push('<div class="' + ROOT_ID + '_subtitle">' + entry.labels[0].text + '</div>');
-            buffer.push('<ol>');
-          }
-          for (var i in children) {
-            processEntry(children[i], level+1);
-          }
-          break;
-        case 'headword':
-        case 'meaning':
-        case 'example':
-          if (terms && terms.length) {
-            buffer.push('<li>');
-            
-            for (var i in terms) {
-              if (terms[i].text) {
-                value = terms[i].text.replace(/^\s*|\s*$/g, '');
-                if (i != 0 && terms[i].type != 'url') buffer.push(' &nbsp; ');
-                if (terms[i].type == 'text') {       
-                  if (type == 'headword') {
-                    buffer.push('<span class="' + ROOT_ID + '_headword">' + value + '</span>');
-                  } else {
-                    buffer.push('<span>' + value + '</span>');
-                  }
-                  if (options.showLabels) {
-                    for (var j in terms[i].labels) {
-                      var label = terms[i].labels[j];
-                      buffer.push(' ');
-                      buffer.push('<span class="' + ROOT_ID + '_label" title="' + label.title + '">' + label.text + '</span>');
-                    }
-                  }
-                } else if (terms[i].type == 'sound') {
-                  buffer.push(getAudioHtml(value));
-                } else if (terms[i].type == 'url') {
-                  buffer.push(value.replace(/\?[^<>]*<\/a>$/, '</a>'));
-                }
-              }
-            }
-              
-            if (children) {
-              buffer.push('<ul class="' + ROOT_ID + '_examples">');
-              for (var i in children) {
-                processEntry(children[i], level+1);
-              }
-              buffer.push('</ul>');
-            }
-            
-            buffer.push('</li>');
-          } else {
-            for (var i in children) {
-              processEntry(children[i], level+1);
-            }
-          }
-          break;
-        case 'related':
-          if (level != 0 && terms && terms.length) {
-            var do_link = false;
-            buffer.push('<li class="' + ROOT_ID + '_related">');
-            if (entry.labels && entry.labels.length && entry.labels[0].text) {
-              buffer.push(entry.labels[0].text.replace(':', '') + ': ');
-              do_link = (entry.labels[0].text.search('See') != -1);
-            } else {
-              buffer.push('See also: ');
-              do_link = true;
-            }
-              
-            for (var i in terms) {
-              if (terms[i].text && terms[i].type == 'text') {
-                if (i != 0) buffer.push(', ');
-                if (do_link) {
-                  var extern_link = EXTERN_LINK_TEMPLATE;
-                  extern_link = extern_link.replace('%src_lang%', dict_entry.sourceLanguage);
-                  extern_link = extern_link.replace('%dst_lang%', dict_entry.targetLanguage);
-                  extern_link = extern_link.replace('%query%', terms[i].text);
-                  buffer.push('<a class="' + ROOT_ID + '_dict_link" href="' + extern_link + '" target="_blank">');
-                  buffer.push(terms[i].text);
-                  buffer.push('</a>');
-                } else {
-                  buffer.push(terms[i].text);
-                }
-              }
-            }
-            
-            if (children.length) {
-              buffer.push('<ul>');
-              for (var i in children) {
-                processEntry(children[i], level+1);
-              }
-              buffer.push('</ul>');
-            }
-          
-            buffer.push('</li>');
-          }
-          break;
-      }
-    }
-  
-    var first_block = true;
-  
-    // Primary definition.
-    if (dict_entry.primaries.length) {
-      var primary = dict_entry.primaries[0];
-      var sound_found = false;
-      var main_title = null;
-      
-      // Header with formatted query and pronunciation.
-      buffer.push('<div class="' + ROOT_ID + '_header">');
-      
-      for (var i in primary.terms) {
-        var type = primary.terms[i].type;
-        var value = primary.terms[i].text;
-        switch (type) {
-          case 'text':
-            if (main_title == null) {
-              if (options.showStar) {
-                buffer.push('<img id="' + ROOT_ID + '_star" src="' + UNSTARRED_ICON_URL + '" />');
-              }
-              buffer.push('<span class="' + ROOT_ID + '_title">' + value + '</span>');
-              main_title = value;
-            }
-            break;
-          case 'phonetic':
-            buffer.push('<span class="' + ROOT_ID + '_phonetic" title="Phonetic">' + value + '</span>');
-            break;
-          case 'sound':
-            buffer.push(getAudioHtml(value));
-            sound_found = true;
-            break;
-        }
-      }
-      
-      // Default sound if none specified.
-      if (!sound_found && main_title != null) {
-        var query = main_title.toLowerCase().replace(/[-\s]+/g, '_');
-        if (query.match(/^[a-z_]+$/i)) {
-          var url = 'http://www.gstatic.com/dictionary/static/sounds/de/0/' + query + '.mp3';
-          buffer.push(getAudioHtml(url));
-        }
-      }
-    
-      buffer.push('</div>');
 
-      // Conjugates.
-      if (options.showConjugates && primary.entries &&
-          primary.entries[0] && primary.entries[0].type == 'related') {
-        var terms = primary.entries[0].terms;
-        buffer.push('<div id="' + ROOT_ID + '_conjugates">');
-        for (var i in terms) {
-          buffer.push('<span class="' + ROOT_ID + '_headword">' + terms[i].text + '</span>');
-          for (var j in terms[i].labels) {
-            buffer.push(' ');
-            buffer.push('<span class="' + ROOT_ID + '_label">' + terms[i].labels[j].text + '</span>');
-          }
-          buffer.push('<br />');
-        }
-        buffer.push('</div>');
-      }
-      
-      first_block = false;
-    
-      // Meanings.
-      buffer.push('<ol id="' + ROOT_ID + '_meanings">');
-      for (var i in primary.entries) {
-        processEntry(primary.entries[i], 0);
-      }
-      buffer.push('</ol>');
-    }
-    
-    // Synonyms
-    if (options.showSynonyms && dict_entry.synonyms &&
-        dict_entry.synonyms.length && dict_entry.synonyms[0].entries) {
-      if (first_block) {
-        first_block = false;
-      } else {
-        buffer.push('<hr class="' + ROOT_ID + '_separator" />');
-      }
-      buffer.push('<div class="' + ROOT_ID + '_subtitle">Synonyms</div>');
-      
-      var synonyms = dict_entry.synonyms[0].entries;
-      
-      buffer.push('<ol id="' + ROOT_ID + '_synonyms">');
-      for (var i in synonyms) {
-        if (synonyms[i].labels[0].text) {
-          buffer.push('<li title="' + synonyms[i].labels[0].title + '">' + synonyms[i].labels[0].text + ': ');
-          var first_synonym = true;
-          for (var j in synonyms[i].terms) {
-            if (first_synonym) {
-              first_synonym = false;
-            } else {
-              buffer.push(', ');
-            }
-            var extern_link = EXTERN_LINK_TEMPLATE;
-            extern_link = extern_link.replace('%src_lang%', dict_entry.sourceLanguage);
-            extern_link = extern_link.replace('%dst_lang%', dict_entry.targetLanguage);
-            extern_link = extern_link.replace('%query%', synonyms[i].terms[j].text);
-            buffer.push('<a class="' + ROOT_ID + '_dict_link" href="' + extern_link + '">' + synonyms[i].terms[j].text + '</a>');
-          }
-          buffer.push('</li>');
-        }
-      }
-      buffer.push('</ol>');
-    }
-    
-    // Related Phrases
-    if (options.showRelated && dict_entry.relatedPhrases &&
-        dict_entry.relatedPhrases.length && dict_entry.relatedPhrases[0].entries) {
-      if (first_block) {
-        first_block = false;
-      } else {
-        buffer.push('<hr class="' + ROOT_ID + '_separator" />');
-      }
-      buffer.push('<div class="' + ROOT_ID + '_subtitle">Related Phrases</div>');
-      
-      var related = dict_entry.relatedPhrases;
-      
-      buffer.push('<ul id="' + ROOT_ID + '_related_phrases">');
-      for (var i in related) {
-        buffer.push('<li>');
-        var first_headword = true;
-        for (var j in related[i].terms) {
-          if (first_headword) {
-            first_headword = false;
-          } else {
-            buffer.push(', ');
-          }
-          var extern_link = EXTERN_LINK_TEMPLATE;
-          extern_link = extern_link.replace('%src_lang%', dict_entry.sourceLanguage);
-          extern_link = extern_link.replace('%dst_lang%', dict_entry.targetLanguage);
-          extern_link = extern_link.replace('%query%', related[i].terms[j].text);
-          buffer.push('<a class="' + ROOT_ID + '_headword ' + ROOT_ID + '_dict_link" href="' + extern_link + '">' + related[i].terms[j].text + '</a>');
-        }
-        buffer.push('<br />');
-        buffer.push(related[i].entries[0].terms[0].text);
-        buffer.push('</li>');
-      }
-      buffer.push('</ul>');
-    }
-    
-    // Web definitions.
-    if (options.showWebDefinitions && dict_entry.webDefinitions &&
-        dict_entry.webDefinitions.length && dict_entry.webDefinitions[0].entries) {
-      if (first_block) {
-        first_block = false;
-      } else {
-        buffer.push('<hr class="' + ROOT_ID + '_separator" />');
-      }
-      buffer.push('<div class="' + ROOT_ID + '_subtitle">Web References</div>');
-      
-      var definition = dict_entry.webDefinitions[0];
-      
-      buffer.push('<ol class="' + ROOT_ID + '_references">');
-      for (var i in definition.entries) {
-        processEntry(definition.entries[i], 0);
-      }
-      buffer.push('</ol>');
-    }
-    
-    // TODO(max99x): support Related Phrases.          
-  }
+  var entries = response.match(/<LI>(.+)/gi);
+  var source = response.match(/<p>(.+)<\/p>/gi);
   
+  if (!entries || entries.length == 0) {
+    buffer.push('<div style="display: table; padding-top: 3em; width: 100%;"><div style="display: table-cell; text-align: center; vertical-align: middle;">No definitions for <b>' + query + '</b>.</div></div>');
+  } else {
+    buffer.push('<span class="' + ROOT_ID + '_title">' + query.toLowerCase() + '</span>');
+    buffer.push('<ul>');
+    for (var i in entries) {
+      buffer.push('<li>');
+      buffer.push(entries[i].substr(4));
+      buffer.push('</li>');
+    }
+    buffer.push('</ul>');
+    
+    if (source && source.length) {
+      buffer.push('<hr />');
+      buffer.push(source[0]);
+    }
+  }
+
   buffer.push('</div>');
 
   buffer.push('<span id="' + ROOT_ID + '_shader_top" style="background: url(\'' + GRADIENT_DOWN_URL + '\') repeat-x !important"></span>');
@@ -749,23 +448,24 @@ function getZoomRatio() {
   return parseFloat(zoom_ratio || '0');
 }
 
-// Predicate to check whether the selected modifier key is active in an event.
+// Predicate to check whether the selected modifier key (and only it) is active
+// in an event.
 function checkModifier(modifier, e) {
   switch (modifier) {
     case 'None':
-      return true;
+      return !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey;
     case 'Ctrl':
-      return e.ctrlKey;
+      return e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey;
     case 'Alt':
-      return e.altKey;
+      return !e.ctrlKey && e.altKey && !e.metaKey && !e.shiftKey;
     case 'Meta':
-      return e.metaKey;
+      return !e.ctrlKey && !e.altKey && e.metaKey && !e.shiftKey;
     case 'Ctrl+Alt':
-      return e.ctrlKey && e.altKey;
+      return e.ctrlKey && e.altKey && !e.metaKey && !e.shiftKey;
     case 'Ctrl+Shift':
-      return e.ctrlKey && e.shiftKey;
+      return e.ctrlKey && !e.altKey && !e.metaKey && e.shiftKey;
     case 'Alt+Shift':
-      return e.altKey && e.shiftKey;
+      return !e.ctrlKey && e.altKey && !e.metaKey && e.shiftKey;
     default:
       return false;
   }

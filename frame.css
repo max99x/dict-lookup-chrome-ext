@@ -175,7 +175,7 @@
 }
 
 #chrome_ggl_dict_ext #chrome_ggl_dict_ext_logo {
-  display: block;
+  display: none;
   float: right;
   position: relative;
   top: 4px;
@@ -200,7 +200,7 @@
   padding-top: 10px;
 }
 
-#chrome_ggl_dict_ext .chrome_ggl_dict_ext_separator {
+#chrome_ggl_dict_ext hr {
   margin: 20px auto 10px auto;
   height: 0px;
   width: 100%;

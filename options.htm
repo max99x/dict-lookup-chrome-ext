@@ -2,7 +2,7 @@
  
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
   <head>
-    <title>Google Dictionary Lookup - Options</title>
+    <title>Dictionary Lookup - Options</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <script type="text/javascript">
       //<![CDATA[
@@ -31,10 +31,12 @@
         }
       }
       
+      var SHOWN_DISCLAIMER = Boolean(localStorage.getObject('shownDisclamer3'));
+      localStorage.setObject('shownDisclamer3', true);
+      
       selects    = ['clickModifier', 'shortcutModifier', 'shortcutKey'];
       checkboxes = ['shortcutEnable', 'shortcutSelection', 'hideWithEscape',
-                    'saveFrameSize', 'showStar', 'showLabels', 'showConjugates',
-                    'showWebDefinitions', 'showSynonyms', 'showRelated'];
+                    'saveFrameSize'];
       textboxes  = ['frameWidth', 'frameHeight', 'queryFormWidth'];
       
       // Restores state from localStorage.
@@ -50,13 +52,6 @@
         document.getElementById('queryFormWidth').value = 250;
         document.getElementById('hideWithEscape').checked = true;
         document.getElementById('saveFrameSize').checked = true;
-        document.getElementById('showStar').checked = true;
-        document.getElementById('showLabels').checked = false;
-        document.getElementById('showConjugates').checked = false;
-        document.getElementById('showWebDefinitions').checked = true;
-        document.getElementById('showSynonyms').checked = false;
-        document.getElementById('showRelated').checked = false;
-        setSelection('language', 'en|en');
       
         // Override defaults by saved settings.
         for (var i in selects) {
@@ -76,9 +71,6 @@
           var val = localStorage.getObject(textbox);
           if (val != null) document.getElementById(textbox).value = Math.round(val);
         }
-        
-        var language = localStorage.getObject('sourceLanguage') + '|' + localStorage.getObject('destinationLanguage');
-        if (language != null) setSelection('language', language);
         
         updateShortcutFields();
       }
@@ -101,10 +93,6 @@
           if (value) localStorage.setObject(textbox, value);
         }
         
-        var language = document.getElementById('language').value.split('|');
-        localStorage.setObject('sourceLanguage', language[0]);
-        localStorage.setObject('destinationLanguage', language[1]);
-        
         // Fade in status message.
         var status = document.getElementById('saveStatusMessage');
         status.style.opacity = 1;
@@ -118,6 +106,95 @@
         document.getElementById('shortcutModifier').disabled = !checked;
         document.getElementById('shortcutKey').disabled = !checked;
         document.getElementById('shortcutSelection').disabled = !checked;
+      }
+      
+      function showDisclaimer() {
+        setTimeout(function() {
+          if (SHOWN_DISCLAIMER) return;
+          
+          grayOut(true);
+          
+          var disclaimer = document.createElement('div');
+          disclaimer.id = 'disclaimer';
+          document.body.appendChild(disclaimer);
+          disclaimer.style.zIndex = 2;
+          disclaimer.style.background = 'white';
+          disclaimer.style.position = 'fixed';
+          disclaimer.style.left = (window.innerWidth - 700) / 2 + 'px';
+          disclaimer.style.width = '700px';
+          disclaimer.style.padding = '15px';
+          disclaimer.style.borderRadius = '15px';
+          setTimeout(function() {
+            disclaimer.style.opacity = 1;
+            disclaimer.style.top = (window.innerHeight - disclaimer.offsetHeight) / 2 + 'px';
+          }, 100);
+          
+          var title = document.createElement('h2');
+          disclaimer.appendChild(title);
+          title.innerText = 'Disclaimer';
+          title.style.textAlign = 'center';
+          
+          var text = document.createElement('p');
+          disclaimer.appendChild(text);
+          text.innerHTML = '<p>Greetings,</p><p>Thank you for using the Dictionary Lookup extension.</p><p>Until recently, this extension was known as "Google Dictionary Lookup" and used as its data source the Google Dictionary. Unfortunately, due to Google\'s contracts with their data providers, they are not legally allowed to expose the Dictionary API to third parties, and as such, I was forced to switch providers.</p><p>This extension\'s goal has always been to provide fast lookup and the cleanest possible interface, but I was unable to find any other free online dictionary that satisfied these constraints and allows third party access, and as such, had to fall back to the public domain Webster 1913 dictionary. Sadly, this means that the quality and amount of info provided by this dictionary has suffered.</p><p>Fear not, however, as I have created a separate branch of this extension, <a href="https://chrome.google.com/extensions/detail/pebegifiepdlicjchldkdlmbohhhpcfi">Inline Search & Lookup</a>, to provide support for any and all online dictionaries at the choice of the user.</p><p>If you have used this extension only for translation, you should consider switching to <a href="https://chrome.google.com/extensions/detail/jlhlebbhengjlhmcjebbkambaekglhkf">Bubble Translate</a>.</p><p>Regards,<br />Max</p>';
+          
+          var button = document.createElement('input');
+          button.type = 'button';
+          disclaimer.appendChild(button);
+          button.value = 'Close';
+          button.disabled = true;
+          button.style.display = 'block';
+          button.style.margin = 'auto';
+          button.style.padding = '0.25em';
+          button.addEventListener('click', function() {
+            grayOut(false);
+            disclaimer.style.opacity = 0;
+            setTimeout(function() {
+              disclaimer.style.display = 'none';
+            }, 400);
+          });
+          
+          setTimeout(function() {
+            button.disabled = false;
+          }, 3000);
+        }, 300);
+      }
+      
+      // Background graying function, based on: 
+      // http://www.hunlock.com/blogs/Snippets:_Howto_Grey-Out_The_Screen
+      function grayOut(vis) {
+        // Pass true to gray out screen, false to ungray.
+        var dark_id = 'shader';
+        var dark = document.getElementById(dark_id);
+        var first_time = (dark == null);
+        
+        if (first_time) {
+          // First time - create shading layer.
+          var tnode = document.createElement('div');
+          tnode.id = dark_id;
+          
+          tnode.style.position = 'absolute';
+          tnode.style.top = '0px';
+          tnode.style.left = '0px';
+          tnode.style.overflow = 'hidden';
+          
+          document.body.appendChild(tnode);
+          dark = document.getElementById(dark_id);
+        }
+        
+        if (vis) {
+          // Set the shader to cover the entire page and make it visible.
+          dark.style.zIndex = 1;
+          dark.style.backgroundColor = '#000000';
+          dark.style.width = document.body.scrollWidth + 'px';
+          dark.style.height = document.body.scrollHeight + 'px';
+          dark.style.display = 'block';
+          
+          setTimeout(function() {dark.style.opacity = 0.7;}, 100);
+        } else if (dark.style.opacity != 0) {
+          setTimeout(function() {dark.style.opacity = 0;}, 100);
+          setTimeout(function() {dark.style.display = 'none';}, 400);
+        }
       }
       //]]>
     </script>
@@ -186,13 +263,13 @@
         color: #777;
         font-size: 110%;
       }
-      input, select {
+      #container input, #container select {
         margin-left: 0px;
       }
-      input[type=text] {
+      #container input[type=text] {
         width: 2.25em;
       }
-      input[type=button] {
+      #container input[type=button] {
         margin: auto;
         margin-bottom: 10px;
         margin-top: -10px;
@@ -208,61 +285,22 @@
         font-size: 120%;
       }
 
-      input[type=button]:hover {
+      #container input[type=button]:hover {
         background-image: -webkit-gradient(linear, left top, left bottom, from(gray), to(#BBBBBB));
         padding: 3px 12px 2px 13px;
       }
+
+      #shader, #disclaimer {
+        opacity: 0;
+        -webkit-transition: opacity 0.35s linear;
+      }
     </style>
   </head>
-  <body onload="restoreOptions()">
+  <body onload="restoreOptions(); showDisclaimer();">
     <div id="container">
-      <h1>Google Dictionary Lookup Options</h1>
+      <h1>Dictionary Lookup Options</h1>
       <fieldset>
         <legend>General</legend>
-        <div class="field">
-          <label for="language">Language(s):</label>
-          <select id="language">
-            <option value="en|en">English</option>
-            <option value="en|*">Auto-Detect (Experimental)</option>
-            <option value="en|ar">English &lt;&gt; Arabic</option>
-            <option value="en|bn">English &lt;&gt; Bengali</option>
-            <option value="en|bg">English &lt;&gt; Bulgarian</option>
-            <option value="en|zh-CN">English &lt;&gt; Chinese (Simplified)</option>
-            <option value="en|zh-TW">English &lt;&gt; Chinese (Traditional)</option>
-            <option value="en|hr">English &lt;&gt; Croatian</option>
-            <option value="en|cs">English &lt;&gt; Czech</option>
-            <option value="en|fi">English &lt;&gt; Finnish</option>
-            <option value="en|fr">English &lt;&gt; French</option>
-            <option value="en|de">English &lt;&gt; German</option>
-            <option value="en|el">English &lt;&gt; Greek</option>
-            <option value="en|gu">English &lt;&gt; Gujarati</option>
-            <option value="en|iw">English &lt;&gt; Hebrew</option>
-            <option value="en|hi">English &lt;&gt; Hindi</option>
-            <option value="en|it">English &lt;&gt; Italian</option>
-            <option value="en|kn">English &lt;&gt; Kannada</option>
-            <option value="en|ko">English &lt;&gt; Korean</option>
-            <option value="en|ml">English &lt;&gt; Malayalam</option>
-            <option value="en|mr">English &lt;&gt; Marathi</option>
-            <option value="en|pt">English &lt;&gt; Portuguese</option>
-            <option value="en|ru">English &lt;&gt; Russian</option>
-            <option value="en|sr">English &lt;&gt; Serbian</option>
-            <option value="en|es">English &lt;&gt; Spanish</option>
-            <option value="en|ta">English &lt;&gt; Tamil</option>
-            <option value="en|te">English &lt;&gt; Telugu</option>
-            <option value="en|th">English &lt;&gt; Thai</option>
-            <option value="zh-CN|zh-CN">Chinese (Simplified)</option>
-            <option value="zh-TW|zh-TW">Chinese (Traditional)</option>
-            <option value="cs|cs">Czech</option>
-            <option value="nl|nl">Dutch</option>
-            <option value="fr|fr">French</option>
-            <option value="de|de">German</option>
-            <option value="it|it">Italian</option>
-            <option value="ko|ko">Korean</option>
-            <option value="pt|pt">Portuguese</option>
-            <option value="ru|ru">Russian</option>
-            <option value="es|es">Spanish</option>
-          </select>
-        </div>
         <div class="field">
           <label for="clickModifier">Mouse lookup modifier:</label>
           <select id="clickModifier">
@@ -330,33 +368,6 @@
         <div class="field">
           <label for="shortcutSelection">Shortcut looks up selection:</label>
           <input type="checkbox" id="shortcutSelection" />
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend>Content</legend>
-        <div class="field">
-          <label for="showStar">Favorite Icon</label>
-          <input type="checkbox" id="showStar" />
-        </div>
-        <div class="field">
-          <label for="showConjugates">Conjugates and Plurals</label>
-          <input type="checkbox" id="showConjugates" />
-        </div>
-        <div class="field">
-          <label for="showSynonyms">Synonyms</label>
-          <input type="checkbox" id="showSynonyms" />
-        </div>
-        <div class="field">
-          <label for="showLabels">Grammatical Labels</label>
-          <input type="checkbox" id="showLabels" />
-        </div>
-        <div class="field">
-          <label for="showRelated">Related Phrases</label>
-          <input type="checkbox" id="showRelated" />
-        </div>
-        <div class="field">
-          <label for="showWebDefinitions">Web Definitions</label>
-          <input type="checkbox" id="showWebDefinitions" />
         </div>
       </fieldset>
       <fieldset>

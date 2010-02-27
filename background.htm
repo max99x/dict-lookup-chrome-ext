@@ -1,14 +1,7 @@
 <html>
   <script>
     // API URLs.
-    var DICT_API_URL = 'http://www.google.com/dictionary/json?callback=q&q=%query%&sl=%src_lang%&tl=%dst_lang%&restrict=pr'
-    var LANG_API_URL = 'http://ajax.googleapis.com/ajax/services/language/detect?callback=x&q=%query%&v=1.0'
-    var STAR_API_URL = 'http://www.google.com/dictionary/wordlistop?q=%query%&sl=%src_lang%&tl=%dst_lang%&action=%action%'
-
-    // Supported languages.
-    var SUPPORTED_LANGUAGES = {es: true, ar: true, bn: true, bg: true, hr: true, cs: true, fi: true, fr: true, de: true, el: true, gu: true, iw: true, hi: true, it: true, kn: true, ko: true, ml: true, mr: true, pt: true, ru: true, sr: true, ta: true, te: true, th: true};
-    SUPPORTED_LANGUAGES['zh-CN'] = true;
-    SUPPORTED_LANGUAGES['zh-TW'] = true;
+    var DICT_API_URL = 'http://www.onelook.com/?other=web1913&w=%query%&xml=1'
 
     // Helpers to store and access objects in local storage.
     Storage.prototype.setObject = function(key, value) {
@@ -50,42 +43,6 @@
       xhr.open('GET', url, true);
       xhr.send();
     }
-    
-    // Lookup a word and call a callback with the result.
-    function lookup(query, source, destination, callback) {
-      var url = DICT_API_URL;
-      url = url.replace('%query%', query);
-      url = url.replace('%src_lang%', source);
-      url = url.replace('%dst_lang%', destination);
-      
-      if (localStorage.getObject('showWebDefinitions')) url += ',de';
-      if (localStorage.getObject('showSynonyms')) url += ',sy';
-      if (localStorage.getObject('showRelated')) url += ',re';
-      
-      sendAjaxRequest(url, function(resp) {
-        // Remove the q(...) callback to get the actual JSON string.
-        resp = resp.substring(2, resp.length-10);
-        callback(JSON.parse(resp));
-      });
-    }
-    
-    // Detect the langauge of a word and the callback with the language code.
-    function detectLanguage(query, callback) {
-      var url = LANG_API_URL;
-      url = url.replace('%query%', query);
-      
-      sendAjaxRequest(url, function(resp) {
-        // Remove the q(...) callback to get the actual JSON string.
-        resp = resp.substring(2, resp.length-1);
-        resp = JSON.parse(resp);
-        if (resp && resp.responseData && resp.responseData.language &&
-            SUPPORTED_LANGUAGES[resp.responseData.language]) {
-          callback(resp.responseData.language);
-        } else {
-          callback('en');
-        }
-      });
-    }
         
     // Server procedure for content script.
     // Receives a request containing two parameters:
@@ -93,8 +50,6 @@
     //     "lookup" for a Google Dictionary lookup
     //     "retrieve" to retrieve an object from local storage.
     //     "store" to store an object in the local storage.
-    //     "star" to add a term to Google Dictionary user's starred list.
-    //     "unstar" to remove a term from Google Dictionary user's starred list.
     //   arg: the term to look up or the name of the object to retrieve/store.
     //   arg2: the object to store. Used only with "store".
     chrome.extension.onRequest.addListener(function(request, sender, callback) {
@@ -107,28 +62,7 @@
         callback('');
       } else if (request.method == 'lookup') {
         // Lookup a term from the dictionary using the Ajax API.
-        src = localStorage.getObject('sourceLanguage') || 'en';
-        dst = localStorage.getObject('destinationLanguage') || 'en';
-        query = request.arg;
-        
-        if (dst == '*') {
-          detectLanguage(query, function(lang) {
-            lookup(query, src, lang, callback);
-          });
-        } else {
-          lookup(query, src, dst, callback);
-        }
-      } else if (request.method == 'star' || request.method == 'unstar') {
-        // Send a starring request.
-        var url = STAR_API_URL;
-        url = url.replace('%query%', request.arg);
-        url = url.replace('%src_lang%', localStorage.getObject('sourceLanguage') || 'en');
-        url = url.replace('%dst_lang%', localStorage.getObject('destinationLanguage') || 'en');
-        url = url.replace('%action%', request.method == 'star' ? 'addword' : 'removeword');
-
-        sendAjaxRequest(url, function(response) {
-          return callback(response.search('"responseStatus":200') != -1);
-        });
+        sendAjaxRequest(DICT_API_URL.replace('%query%', request.arg), callback);
       } else {
         // Invalid request method. Ignore it.
         callback('');

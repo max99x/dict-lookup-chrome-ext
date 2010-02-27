@@ -1,19 +1,18 @@
 {
-  "name": "Google Dictionary Lookup",
-  "version": "2.1.5",
-  "description": "Look up any word in Google Dictionary without leaving the page.",
+  "name": "Dictionary Lookup",
+  "version": "3.0.1",
+  "description": "Look up any word with a simple click and without leaving the page.",
   "icons": { "128": "icon.png" },
   "options_page": "options.htm",
   "background_page": "background.htm",
   "content_scripts": [{
-    "matches": [ "file://*/*", "http://*/*", "https://*/*" ],
+    "matches": [ "http://*/*", "https://*/*" ],
     "run_at": "document_end",
     "css": [ "frame.css" ],
     "js": [ "lookup.js" ]
   }],
   "permissions": [
     "tabs",
-    "http://www.google.com/",
-    "http://ajax.googleapis.com/"
+    "http://www.onelook.com/"
   ]
 }
