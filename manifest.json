@@ -1,16 +1,19 @@
 {
   "name": "Google Dictionary Lookup",
-  "version": "1.2.1",
-  "description": "Ctrl-Double-Click any word to look it up in Google Dictionary.",
+  "version": "2.1.5",
+  "description": "Look up any word in Google Dictionary without leaving the page.",
   "icons": { "128": "icon.png" },
   "options_page": "options.htm",
   "background_page": "background.htm",
   "content_scripts": [{
-    "matches": [ "http://*/*", "https://*/*" ],
+    "matches": [ "file://*/*", "http://*/*", "https://*/*" ],
+    "run_at": "document_end",
     "css": [ "frame.css" ],
     "js": [ "lookup.js" ]
-  }, {
-    "matches": [ "http://www.google.com/dictionary?*&source=unofficial_chrome_ext*" ],
-    "js": [ "cleanup.js" ]
-  }]
+  }],
+  "permissions": [
+    "tabs",
+    "http://www.google.com/",
+    "http://ajax.googleapis.com/"
+  ]
 }

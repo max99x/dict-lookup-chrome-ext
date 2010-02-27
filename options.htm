@@ -31,166 +31,355 @@
         }
       }
       
+      selects    = ['clickModifier', 'shortcutModifier', 'shortcutKey'];
+      checkboxes = ['shortcutEnable', 'shortcutSelection', 'hideWithEscape',
+                    'saveFrameSize', 'showStar', 'showLabels', 'showConjugates',
+                    'showWebDefinitions', 'showSynonyms', 'showRelated'];
+      textboxes  = ['frameWidth', 'frameHeight', 'queryFormWidth'];
+      
       // Restores state from localStorage.
       function restoreOptions() {
         // Set defaults.
         setSelection('clickModifier', 'Ctrl');
-        setSelection('shortcutModifier', 'Alt');
+        setSelection('shortcutModifier', 'Ctrl');
         setSelection('shortcutKey', 'Q');
         document.getElementById('shortcutEnable').checked = true;
         document.getElementById('shortcutSelection').checked = false;
+        document.getElementById('frameWidth').value = 550;
+        document.getElementById('frameHeight').value = 250;
+        document.getElementById('queryFormWidth').value = 250;
+        document.getElementById('hideWithEscape').checked = true;
+        document.getElementById('saveFrameSize').checked = true;
+        document.getElementById('showStar').checked = true;
+        document.getElementById('showLabels').checked = false;
+        document.getElementById('showConjugates').checked = false;
+        document.getElementById('showWebDefinitions').checked = true;
+        document.getElementById('showSynonyms').checked = false;
+        document.getElementById('showRelated').checked = false;
+        setSelection('language', 'en|en');
       
         // Override defaults by saved settings.
-        selects = ['clickModifier', 'shortcutModifier', 'shortcutKey'];
-        checkboxes = ['shortcutEnable', 'shortcutSelection'];
-      
         for (var i in selects) {
-          select = selects[i];
+          var select = selects[i];
           var choice = localStorage.getObject(select);
           if (choice != null) setSelection(select, choice);
         }
       
         for (var i in checkboxes) {
-          checkbox = checkboxes[i];
+          var checkbox = checkboxes[i];
           var checked = localStorage.getObject(checkbox);
           if (checked != null) document.getElementById(checkbox).checked = checked;
         }
+      
+        for (var i in textboxes) {
+          var textbox = textboxes[i];
+          var val = localStorage.getObject(textbox);
+          if (val != null) document.getElementById(textbox).value = Math.round(val);
+        }
+        
+        var language = localStorage.getObject('sourceLanguage') + '|' + localStorage.getObject('destinationLanguage');
+        if (language != null) setSelection('language', language);
+        
+        updateShortcutFields();
       }
       
       // Saves state to localStorage.
       function saveOptions() {
-        selects = ['clickModifier', 'shortcutModifier', 'shortcutKey'];
-        checkboxes = ['shortcutEnable', 'shortcutSelection'];
-      
         for (var i in selects) {
-          select = selects[i];
+          var select = selects[i];
           localStorage.setObject(select, document.getElementById(select).value);
         }
       
         for (var i in checkboxes) {
-          checkbox = checkboxes[i];
+          var checkbox = checkboxes[i];
           localStorage.setObject(checkbox, document.getElementById(checkbox).checked);
         }
+      
+        for (var i in textboxes) {
+          var textbox = textboxes[i];
+          var value = parseInt(document.getElementById(textbox).value);
+          if (value) localStorage.setObject(textbox, value);
+        }
+        
+        var language = document.getElementById('language').value.split('|');
+        localStorage.setObject('sourceLanguage', language[0]);
+        localStorage.setObject('destinationLanguage', language[1]);
         
         // Fade in status message.
         var status = document.getElementById('saveStatusMessage');
         status.style.opacity = 1;
         setTimeout(function() {
           status.style.opacity = 0;
-        }, 1250);
+        }, 1500);
+      }
+      
+      function updateShortcutFields() {
+        checked = document.getElementById('shortcutEnable').checked;
+        document.getElementById('shortcutModifier').disabled = !checked;
+        document.getElementById('shortcutKey').disabled = !checked;
+        document.getElementById('shortcutSelection').disabled = !checked;
       }
       //]]>
     </script>
     <style type="text/css">
+      body {
+        font-family: Arial, Tahoma, sans-serif;
+        margin-top: 0px;
+        padding-top: 0px;
+      }
       h1 {
-        font-family: Calibri, sans-serif;
-        font-size: 2em;
-        margin: auto;
+        margin-top: 0px;
+        color: #F8F8FF;
+        background-image: -webkit-gradient(linear, left top, left bottom, from(#BBBBBB), to(gray));
+        border-radius: 0px 0px 10px 10px;
+        padding: 5px 10px;
+        text-shadow: rgba(0, 0, 0, 0.3) 0px -1px 1px;
+        font-size: 150%;
         text-align: center;
-        color: #000066;
-        text-shadow: rgba(0, 0, 0, 0.75) 1px 1px 5px;
+        -webkit-box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 5px;
       }
       label {
         float: left;
-        width: 200px;
+        width: 20em;
         padding-right: 20px;
         text-align: right;
-      }
-      hr {
-        border: 1px navy solid;
-        border-bottom: none;
-        height: 0px;
-        width: 100%;
       }
       div.field {
         padding-top: 5px;
       }
       #container {
-        background: #EEEEFF;
-        width: 600px;
         margin: auto;
-        margin-top: 20px;
-        padding: 20px;
-        border: 1px #AAAAAA solid;
-        border-radius: 20px;
-        -webkit-box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 24px;
+        width: 600px;
+        margin-top: 0px;
+        padding-top: 0px;
       }
       #saveStatusMessage {
-        color: navy;
+        display: block;
+        position: fixed;
+        top: 45%;
+        left: 0px;
+        text-align: center;
+        color: white;
+        font-weight: bold;
+        text-shadow: rgba(0, 0, 0, 0.2) 0px -1px 1px;
+        background-image: -webkit-gradient(linear, left top, left bottom, from(#BBBBBB), to(gray));
+        border-radius: 0px 15px 15px 0px;
+        padding: 10px 20px;
         opacity: 0;
-        -webkit-transition: opacity 1.25s ease;
+        -webkit-transition: opacity 1.5s ease;
+      }
+      fieldset {
+        background: #F8F8FF;
+        border: 1px #CCC solid;
+        border-radius: 0px;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        -webkit-box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 5px;
+      }
+      legend {
+        background: #F8F8FF;
+        border: 1px #CCC solid;
+        padding: 5px 10px;
+        text-shadow: rgba(0, 0, 0, 0.2) 0px -1px 1px;
+        color: #777;
+        font-size: 110%;
+      }
+      input, select {
+        margin-left: 0px;
+      }
+      input[type=text] {
+        width: 2.25em;
+      }
+      input[type=button] {
+        margin: auto;
+        margin-bottom: 10px;
+        margin-top: -10px;
+        background-image: -webkit-gradient(linear, left top, left bottom, from(#BBBBBB), to(gray));
+        color: white;
+        border: none;
+        border-radius: 15px;
+        text-shadow: rgba(0, 0, 0, 0.4) 0px -1px 1px;
+        font-weight: bold;
+        padding: 2px 13px 3px 12px;
+        display: block;
+        cursor: pointer;
+        font-size: 120%;
+      }
+
+      input[type=button]:hover {
+        background-image: -webkit-gradient(linear, left top, left bottom, from(gray), to(#BBBBBB));
+        padding: 3px 12px 2px 13px;
       }
     </style>
   </head>
   <body onload="restoreOptions()">
     <div id="container">
       <h1>Google Dictionary Lookup Options</h1>
-      <hr />
-      <div class="field">
-        <label for="clickModifier">Mouse Lookup Modifier:</label>
-        <select id="clickModifier">
-          <option value="None">None</option>
-          <option value="Ctrl">Ctrl</option>
-          <option value="Alt">Alt</option>
-          <option value="Ctrl+Alt">Ctrl+Alt</option>
-        </select>
-      </div>
-      <hr />
-      <div class="field">
-        <label for="shortcutEnable">Enable Keyboard Shortcut:</label>
-        <input type="checkbox" id="shortcutEnable" />
-      </div>
-      <div class="field">
-        <label for="shortcutModifier">Shortcut Modifier:</label>
-        <select id="shortcutModifier">
-          <option value="Ctrl">Ctrl</option>
-          <option value="Alt">Alt</option>
-          <option value="Ctrl+Alt">Ctrl+Alt</option>
-          <option value="Ctrl+Shift">Ctrl+Shift</option>
-          <option value="Alt+Shift">Alt+Shift</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="shortcutKey">Shortcut Key:</label>
-        <select id="shortcutKey">
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-          <option value="D">D</option>
-          <option value="E">E</option>
-          <option value="F">F</option>
-          <option value="G">G</option>
-          <option value="H">H</option>
-          <option value="I">I</option>
-          <option value="J">J</option>
-          <option value="K">K</option>
-          <option value="L">L</option>
-          <option value="M">M</option>
-          <option value="N">N</option>
-          <option value="O">O</option>
-          <option value="P">P</option>
-          <option value="Q">Q</option>
-          <option value="R">R</option>
-          <option value="S">S</option>
-          <option value="T">T</option>
-          <option value="U">U</option>
-          <option value="V">V</option>
-          <option value="W">W</option>
-          <option value="X">X</option>
-          <option value="Y">Y</option>
-          <option value="Z">Z</option>
-          <option value="`">`</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="shortcutSelection">Shortcut looks up selected text:</label>
-        <input type="checkbox" id="shortcutSelection" />
-      </div>
-      <div class="field">
-        <label for="shortcutSelection">&nbsp;</label>
-        <input type="button" onclick="saveOptions()" value="Save" />
-        <span id="saveStatusMessage">Options saved.</span>
-      </div>
+      <fieldset>
+        <legend>General</legend>
+        <div class="field">
+          <label for="language">Language(s):</label>
+          <select id="language">
+            <option value="en|en">English</option>
+            <option value="en|*">Auto-Detect (Experimental)</option>
+            <option value="en|ar">English &lt;&gt; Arabic</option>
+            <option value="en|bn">English &lt;&gt; Bengali</option>
+            <option value="en|bg">English &lt;&gt; Bulgarian</option>
+            <option value="en|zh-CN">English &lt;&gt; Chinese (Simplified)</option>
+            <option value="en|zh-TW">English &lt;&gt; Chinese (Traditional)</option>
+            <option value="en|hr">English &lt;&gt; Croatian</option>
+            <option value="en|cs">English &lt;&gt; Czech</option>
+            <option value="en|fi">English &lt;&gt; Finnish</option>
+            <option value="en|fr">English &lt;&gt; French</option>
+            <option value="en|de">English &lt;&gt; German</option>
+            <option value="en|el">English &lt;&gt; Greek</option>
+            <option value="en|gu">English &lt;&gt; Gujarati</option>
+            <option value="en|iw">English &lt;&gt; Hebrew</option>
+            <option value="en|hi">English &lt;&gt; Hindi</option>
+            <option value="en|it">English &lt;&gt; Italian</option>
+            <option value="en|kn">English &lt;&gt; Kannada</option>
+            <option value="en|ko">English &lt;&gt; Korean</option>
+            <option value="en|ml">English &lt;&gt; Malayalam</option>
+            <option value="en|mr">English &lt;&gt; Marathi</option>
+            <option value="en|pt">English &lt;&gt; Portuguese</option>
+            <option value="en|ru">English &lt;&gt; Russian</option>
+            <option value="en|sr">English &lt;&gt; Serbian</option>
+            <option value="en|es">English &lt;&gt; Spanish</option>
+            <option value="en|ta">English &lt;&gt; Tamil</option>
+            <option value="en|te">English &lt;&gt; Telugu</option>
+            <option value="en|th">English &lt;&gt; Thai</option>
+            <option value="zh-CN|zh-CN">Chinese (Simplified)</option>
+            <option value="zh-TW|zh-TW">Chinese (Traditional)</option>
+            <option value="cs|cs">Czech</option>
+            <option value="nl|nl">Dutch</option>
+            <option value="fr|fr">French</option>
+            <option value="de|de">German</option>
+            <option value="it|it">Italian</option>
+            <option value="ko|ko">Korean</option>
+            <option value="pt|pt">Portuguese</option>
+            <option value="ru|ru">Russian</option>
+            <option value="es|es">Spanish</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="clickModifier">Mouse lookup modifier:</label>
+          <select id="clickModifier">
+            <option value="None">None</option>
+            <option value="Ctrl">Ctrl</option>
+            <option value="Alt">Alt</option>
+            <option value="Meta">Command (Mac)</option>
+            <option value="Ctrl+Alt">Ctrl+Alt</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="hideWithEscape">Hide popup with Esc:</label>
+          <input type="checkbox" id="hideWithEscape" />
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Keyboard Shortcut</legend>
+        <div class="field">
+          <label for="shortcutEnable">Enable shortcut:</label>
+          <input type="checkbox" id="shortcutEnable" onclick="updateShortcutFields()" />
+        </div>
+        <div class="field">
+          <label for="shortcutModifier">Shortcut modifier:</label>
+          <select id="shortcutModifier">
+            <option value="Ctrl">Ctrl</option>
+            <option value="Alt">Alt</option>
+            <option value="Meta">Command (Mac)</option>
+            <option value="Ctrl+Alt">Ctrl+Alt</option>
+            <option value="Ctrl+Shift">Ctrl+Shift</option>
+            <option value="Alt+Shift">Alt+Shift</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="shortcutKey">Shortcut key:</label>
+          <select id="shortcutKey">
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+            <option value="H">H</option>
+            <option value="I">I</option>
+            <option value="J">J</option>
+            <option value="K">K</option>
+            <option value="L">L</option>
+            <option value="M">M</option>
+            <option value="N">N</option>
+            <option value="O">O</option>
+            <option value="P">P</option>
+            <option value="Q">Q</option>
+            <option value="R">R</option>
+            <option value="S">S</option>
+            <option value="T">T</option>
+            <option value="U">U</option>
+            <option value="V">V</option>
+            <option value="W">W</option>
+            <option value="X">X</option>
+            <option value="Y">Y</option>
+            <option value="Z">Z</option>
+            <option value="`">`</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="shortcutSelection">Shortcut looks up selection:</label>
+          <input type="checkbox" id="shortcutSelection" />
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Content</legend>
+        <div class="field">
+          <label for="showStar">Favorite Icon</label>
+          <input type="checkbox" id="showStar" />
+        </div>
+        <div class="field">
+          <label for="showConjugates">Conjugates and Plurals</label>
+          <input type="checkbox" id="showConjugates" />
+        </div>
+        <div class="field">
+          <label for="showSynonyms">Synonyms</label>
+          <input type="checkbox" id="showSynonyms" />
+        </div>
+        <div class="field">
+          <label for="showLabels">Grammatical Labels</label>
+          <input type="checkbox" id="showLabels" />
+        </div>
+        <div class="field">
+          <label for="showRelated">Related Phrases</label>
+          <input type="checkbox" id="showRelated" />
+        </div>
+        <div class="field">
+          <label for="showWebDefinitions">Web Definitions</label>
+          <input type="checkbox" id="showWebDefinitions" />
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Sizing</legend>
+        <div class="field">
+          <label for="frameWidth">Popup width:</label>
+          <input type="text" id="frameWidth" />
+        </div>
+        <div class="field">
+          <label for="frameHeight">Popup height:</label>
+          <input type="text" id="frameHeight" />
+        </div>
+        <div class="field">
+          <label for="queryFormWidth">Manual query form width:</label>
+          <input type="text" id="queryFormWidth" />
+        </div>
+        <div class="field">
+          <label for="saveFrameSize">Remember size:</label>
+          <input type="checkbox" id="saveFrameSize" />
+        </div>
+      </fieldset>
+      <input type="button" onclick="saveOptions()" value="Save" />
+      <div id="saveStatusMessage">Options saved.</div>
     </div>
   </body>
 </html>
