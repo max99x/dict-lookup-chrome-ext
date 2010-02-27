@@ -1,0 +1,20 @@
+.GoogleDictChromeExt {
+  border: 1px #AAAAAA solid;
+  background: white;
+  
+  border-radius: 20px;
+  opacity: 0;
+  
+  -webkit-transition: opacity 0.35s linear;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 24px;
+}
+
+#GoogleDictChromeExtButton {
+  text-shadow: rgba(0, 0, 0, 1) 0px 0px 8px;
+  -webkit-transition: opacity 0.35s linear;
+}
+
+#darkenScreenObject {
+  opacity: 0;
+  -webkit-transition: opacity 0.35s linear;
+}

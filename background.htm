@@ -1,0 +1,20 @@
+<html>
+  <script>
+    // Helpers to store and access objects in local storage.
+    Storage.prototype.setObject = function(key, value) {
+      this.setItem(key, JSON.stringify(value));
+    }
+    Storage.prototype.getObject = function(key) {
+      var value = this.getItem(key);
+      if (value == null) {
+        return null;
+      } else {
+        return JSON.parse(value);
+      }
+    }
+    
+    chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+      sendResponse(localStorage.getObject(request));
+    });
+  </script>
+</html>

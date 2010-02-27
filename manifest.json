@@ -1,0 +1,16 @@
+{
+  "name": "Google Dictionary Lookup",
+  "version": "1.2.1",
+  "description": "Ctrl-Double-Click any word to look it up in Google Dictionary.",
+  "icons": { "128": "icon.png" },
+  "options_page": "options.htm",
+  "background_page": "background.htm",
+  "content_scripts": [{
+    "matches": [ "http://*/*", "https://*/*" ],
+    "css": [ "frame.css" ],
+    "js": [ "lookup.js" ]
+  }, {
+    "matches": [ "http://www.google.com/dictionary?*&source=unofficial_chrome_ext*" ],
+    "js": [ "cleanup.js" ]
+  }]
+}
