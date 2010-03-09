@@ -1,0 +1,3 @@
+RewriteEngine on
+RewriteRule ^index\.php$ - [NC,L]
+RewriteRule ^(.*)$ /index.php?word=$1 [L]
