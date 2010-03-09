@@ -1,7 +1,7 @@
-import parser
 import MySQLdb
 import json
 from xml.parsers import expat
+from wiktionaryparser import *
 
 class ExpatReader(object):
     def __init__(self):

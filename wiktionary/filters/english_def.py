@@ -20,6 +20,10 @@ class EnglishDefinitionFilter(WiktionaryFilter):
         ----+
         (?:\r\n|\r|\n)
       |
+        (?:\r\n|\r|\n)
+        ==
+        \w
+      |
         $
     )
     ''', re.VERBOSE | re.DOTALL | re.IGNORECASE | re.UNICODE)

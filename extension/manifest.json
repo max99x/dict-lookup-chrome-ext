@@ -1,8 +1,8 @@
 {
   "name": "Dictionary Lookup",
-  "version": "3.0.1",
-  "description": "Look up any word with a simple click and without leaving the page.",
-  "icons": { "128": "icon.png" },
+  "version": "4.0",
+  "description": "Look up any word in an inline frame without leaving the page.",
+  "icons": { "128": "img/icon.png" },
   "options_page": "options.htm",
   "background_page": "background.htm",
   "content_scripts": [{
@@ -13,6 +13,8 @@
   }],
   "permissions": [
     "tabs",
-    "http://www.onelook.com/"
+    "http://localhost/",
+    "http://lookup.max99x.com/",
+    "http://commons.wikimedia.org/"
   ]
 }

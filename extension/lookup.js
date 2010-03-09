@@ -7,19 +7,25 @@ var PADDING_TOP = 15;
 var PADDING_BOTTOM = 15;
 var PADDING_FORM = 10;
 var BASE_Z_INDEX = 65000;
-var QUERY_FORM_HEIGHT = 50;
 
 // URL constants.
-var HANDLE_ICON_URL = chrome.extension.getURL('handle.png');
-var BACK_ICON_URL = chrome.extension.getURL('back.png');
-var LOADER_ICON_URL = chrome.extension.getURL('loader.gif');
-var GRADIENT_DOWN_URL = chrome.extension.getURL('gradient_down.png');
-var GRADIENT_UP_URL = chrome.extension.getURL('gradient_up.png');
+var EXTERN_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/%query%';
+var AUDIO_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/File:%file%';
+var SPEAKER_ICON_URL = chrome.extension.getURL('img/speaker.png');
+var HANDLE_ICON_URL = chrome.extension.getURL('img/handle.png');
+var BACK_ICON_URL = chrome.extension.getURL('img/back.png');
+var LOADER_ICON_URL = chrome.extension.getURL('img/loader.gif');
+var EXTERNAL_ICON_URL = chrome.extension.getURL('img/external.png');
+var GRADIENT_DOWN_URL = chrome.extension.getURL('img/gradient_down.png');
+var GRADIENT_UP_URL = chrome.extension.getURL('img/gradient_up.png');
+// Regexes.
+var DICT_LINK_REGEX = /^http:\/\/en\.wiktionary\.org\/wiki\/([^:]*)$/;
 
 // Internal global vars.
 var body = document.getElementsByTagName('body')[0];
 var breadcrumbs = [];
 var last_query = null;
+var audio_cache = {};
 
 // Extension options with defaults.
 var options = {
@@ -31,8 +37,19 @@ var options = {
   frameWidth: 550,
   frameHeight: 250,
   queryFormWidth: 250,
+  queryFormHeight: 50,  // This one is an approximation for centering.
   hideWithEscape: true,
-  saveFrameSize: true
+  saveFrameSize: true,
+  showExamples: true,
+  showPOS: false,
+  showLabels: true,
+  showIPA: true,
+  showAudio: true,
+  showAudioLinks: true,
+  showRelated: false,
+  showSynonyms: true,
+  showAntonyms: false,
+  showLinks: false
 }
 
 /***************************************************************
@@ -61,6 +78,14 @@ function initialize() {
     document.body.appendChild(link);
   }
   
+  // Override label visibility.
+  if (!options.showLabels) {
+    label_style = document.createElement('style');
+    label_style.type = 'text/css';
+    label_style.innerText = '#chrome_ggl_dict_ext .label {display: none !important}';
+    (document.head || document.body).appendChild(label_style);
+  }
+  
   // Set event listeners.
   window.addEventListener('keydown', handleKeypress, false);
   setTimeout(function() {
@@ -80,10 +105,9 @@ function initialize() {
  ***************************************************************/
 // Handle lookup-on-click.
 function handleClick(e) {
-  // Ignore clicks inside frame.
   is_inside_frame = isClickInsideFrame(e);
 
-  // Remove frame or form if one is displayed.
+  // If click outside the frame/form, remove it.
   if (!is_inside_frame) removePopup(true, true);
   
   // If the modifier is held down and we have a selection, create a pop-up.
@@ -149,7 +173,7 @@ function navigateFrame(query) {
 function createQueryForm() {
   // Calculate the coordinates of the middle of the window.
   var windowX = (window.innerWidth - (PADDING_LEFT + options.queryFormWidth + PADDING_RIGHT)) / 2 ;
-  var windowY = (window.innerHeight - (PADDING_TOP + QUERY_FORM_HEIGHT + PADDING_BOTTOM)) / 2;
+  var windowY = (window.innerHeight - (PADDING_TOP + options.queryFormHeight + PADDING_BOTTOM)) / 2;
   var x = body.scrollLeft + windowX;
   var y = body.scrollTop + windowY;
   
@@ -199,7 +223,7 @@ function createQueryForm() {
     setTimeout(initLookup, 400);
   }, false);
   
-  // Schedule a resize of the textbox to accomodate the button in a single line.
+  // Schedule a resize of the textbox to accommodate the button in a single line.
   setTimeout(function() {
     var width = options.queryFormWidth - button.offsetWidth - 2 * PADDING_FORM - 3;
     textbox.style.width = width + 'px';
@@ -246,7 +270,7 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
       // Add some dynamic element after the HTML is loaded.
       setTimeout(function() {
         // Create a dragging handle.
-        handle = document.createElement('div');
+        var handle = document.createElement('div');
         handle.id = ROOT_ID + '_handle';
         frame.appendChild(handle);
         handle.style.background = 'url("' + HANDLE_ICON_URL + '") !important';
@@ -258,7 +282,7 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
         
         // Create back link.
         if (breadcrumbs.length) {
-          back = document.createElement('div');
+          var back = document.createElement('div');
           back.id = ROOT_ID + '_back';
           frame.appendChild(back);
           back.style.background = 'url("' + BACK_ICON_URL + '") !important';
@@ -269,26 +293,34 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
         }
         
         // Resize shaders to avoid shading scroll bar arrows.
-        shader_top = document.getElementById(ROOT_ID + '_shader_top');
-        shader_bottom = document.getElementById(ROOT_ID + '_shader_bottom');
+        var shader_top = document.getElementById(ROOT_ID + '_shader_top');
+        var shader_bottom = document.getElementById(ROOT_ID + '_shader_bottom');
         if (shader_top && shader_bottom) {
           shader_top.style.width = (shader_top.offsetWidth - 16) + 'px';
           shader_bottom.style.width = (shader_bottom.offsetWidth - 16) + 'px';
         }
         
         // Hook into dictionary links.
-        // TODO: remove this once we're sure it's no longer needed.
-        dict_link_class = new RegExp('\\b' + ROOT_ID + '_dict_link\\b');
-        links = frame.getElementsByTagName('a');
+        var links = frame.getElementsByTagName('a');
         for (var i in links) {
-          if (links[i].className && links[i].className.search(dict_link_class) != -1) {
+          if (links[i].href && DICT_LINK_REGEX.test(links[i].href)) {
             links[i].addEventListener('click', function(e) {
               if (e.which == 1) {
+                var link_word = this.href.match(DICT_LINK_REGEX)[1];
                 if (last_query) breadcrumbs.push(last_query);
-                navigateFrame(this.innerText);
+                navigateFrame(unescape(link_word));
                 e.preventDefault();
               }
             });
+          }
+        }
+        
+        // Hook into audio icons.
+        var spans = frame.getElementsByTagName('span');
+        for (var i in spans) {
+          if (spans[i].className == ROOT_ID + '_audio') {
+            registerAudioIcon(spans[i].getElementsByTagName('img')[0],
+                              spans[i].attributes['data-src'].value);
           }
         }
       }, 100);
@@ -336,6 +368,19 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
   last_query = query;
 }
 
+function registerAudioIcon(icon, filename) {
+  icon.addEventListener('click', function(e) {
+    if (audio_cache[filename]) {
+      new Audio(audio_cache[filename]).play();
+    } else {
+      chrome.extension.sendRequest({method: 'get_audio', arg: filename}, function(url) {
+        audio_cache[filename] = url;
+        new Audio(url).play();
+      });
+    }
+  });
+}
+
 // Fade out then destroy the frame and/or form.
 function removePopup(do_frame, do_form) {
   var form = document.getElementById(FORM_ID);
@@ -362,32 +407,124 @@ function removePopup(do_frame, do_form) {
   }
 }
 
-function createHtmlFromLookup(query, response) {
+function createHtmlFromLookup(query, dict_entry) {
   var buffer = [];
   
   buffer.push('<div id="' + ROOT_ID + '_content">');
-
-  var entries = response.match(/<LI>(.+)/gi);
-  var source = response.match(/<p>(.+)<\/p>/gi);
   
-  if (!entries || entries.length == 0) {
-    buffer.push('<div style="display: table; padding-top: 3em; width: 100%;"><div style="display: table-cell; text-align: center; vertical-align: middle;">No definitions for <b>' + query + '</b>.</div></div>');
+  if (!dict_entry.meanings || dict_entry.meanings.length == 0) {
+    buffer.push('<div style="display: table; padding-top: 3em; width: 100%;"><div style="display: table-cell; text-align: center; vertical-align: middle;">No definitions for <strong>' + query + '</strong>.</div></div>');
   } else {
-    buffer.push('<span class="' + ROOT_ID + '_title">' + query.toLowerCase() + '</span>');
-    buffer.push('<ul>');
-    for (var i in entries) {
+    // Wiktionary link.
+    /*
+    var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', query);
+    buffer.push('<a id="' + ROOT_ID + '_logo" href="' + extern_link + '" target="_blank">');
+    buffer.push('<img src="' + GOOGLE_ICON_URL + '" />');
+    buffer.push('powered<br />by');
+    buffer.push('</a>');
+    */
+    
+    // Header with formatted query and pronunciation.
+    buffer.push('<div class="' + ROOT_ID + '_header">');
+    buffer.push('<span class="' + ROOT_ID + '_title">' + unescape(query) + '</span>');
+    
+    if (options.showIPA && dict_entry.ipa.length) {
+      for (var i in dict_entry.ipa) {
+        buffer.push('<span class="' + ROOT_ID + '_phonetic" title="Phonetic">' + dict_entry.ipa[i] + '</span>');
+      }
+    }
+    
+    if (options.showAudio && dict_entry.audio.length) {
+      for (var i in dict_entry.audio) {
+        var audio = dict_entry.audio[i];
+        buffer.push('<span class="' + ROOT_ID + '_audio" data-src="' + audio.file + '">');
+        buffer.push('<img class="' + ROOT_ID + '_speaker" src="' + SPEAKER_ICON_URL + '" title="Listen">');
+        buffer.push(' (' + audio.type + ')');
+        if (options.showAudioLinks) {
+          buffer.push('<a href="' + AUDIO_LINK_TEMPLATE.replace('%file%', audio.file) + '">');
+          buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Wikimedia Commons File Description">');
+          buffer.push('</a>');
+        }
+        buffer.push('</span>');
+      }
+    }
+    
+    buffer.push('</div>');
+    
+    // Meanings.
+    buffer.push('<ol id="' + ROOT_ID + '_meanings">');
+    for (var i in dict_entry.meanings) {
+      var meaning = dict_entry.meanings[i];
       buffer.push('<li>');
-      buffer.push(entries[i].substr(4));
+      if (!options.showLinks) {
+        meaning.content = meaning.content.replace(/<a[^>]*>([^<>]*)<\/a>/g, '$1');
+      }
+      buffer.push(meaning.content);
+      if (options.showPOS) {
+        buffer.push('<span class="' + ROOT_ID + '_pos">' + meaning.type + '</span>');
+      }
+      if (options.showExamples && meaning.examples) {
+        buffer.push('<ul class="' + ROOT_ID + '_examples">');
+        for (var j in meaning.examples) {
+          buffer.push('<li>' + meaning.examples[j] + '</li>');
+        }
+        buffer.push('</ul');
+      }
+
       buffer.push('</li>');
     }
-    buffer.push('</ul>');
+    buffer.push('</ol>');
     
-    if (source && source.length) {
-      buffer.push('<hr />');
-      buffer.push(source[0]);
+    // Synonyms
+    if (options.showSynonyms && dict_entry.synonyms.length) {
+      buffer.push('<hr class="' + ROOT_ID + '_separator" />');
+      buffer.push('<div class="' + ROOT_ID + '_subtitle">Synonyms</div>');
+      
+      buffer.push('<p id="' + ROOT_ID + '_synonyms">');
+      for (var i in dict_entry.synonyms) {
+        var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', dict_entry.synonyms[i]);
+        buffer.push('<a href="' + extern_link + '">' + dict_entry.synonyms[i] + '</a>');
+        if (i < dict_entry.synonyms.length - 1) {
+          buffer.push(', ');
+        }
+      }
+      buffer.push('</p>');
+    }
+    
+    // Antonyms
+    if (options.showAntonyms && dict_entry.antonyms.length) {
+      buffer.push('<hr class="' + ROOT_ID + '_separator" />');
+      buffer.push('<div class="' + ROOT_ID + '_subtitle">Antonyms</div>');
+      
+      buffer.push('<p id="' + ROOT_ID + '_antonyms">');
+      for (var i in dict_entry.antonyms) {
+        var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', dict_entry.antonyms[i]);
+        buffer.push('<a href="' + extern_link + '">' + dict_entry.antonyms[i] + '</a>');
+        if (i < dict_entry.antonyms.length - 1) {
+          buffer.push(', ');
+        }
+      }
+      buffer.push('</p>');
+    }
+    
+    // Related
+    if (options.showRelated && dict_entry.related.length) {
+      buffer.push('<hr class="' + ROOT_ID + '_separator" />');
+      buffer.push('<div class="' + ROOT_ID + '_subtitle">See also</div>');
+      
+      buffer.push('<p id="' + ROOT_ID + '_related">');
+      for (var i in dict_entry.related) {
+        var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', dict_entry.related[i]);
+        buffer.push('<a href="' + extern_link + '">' + dict_entry.related[i] + '</a>');
+        if (i < dict_entry.related.length - 1) {
+          buffer.push(', ');
+        }
+      }
+      buffer.push('</p>');
     }
   }
-
+  
+  buffer.push('<div id="' + ROOT_ID + '_spacer"></div>');
   buffer.push('</div>');
 
   buffer.push('<span id="' + ROOT_ID + '_shader_top" style="background: url(\'' + GRADIENT_DOWN_URL + '\') repeat-x !important"></span>');
@@ -448,24 +585,23 @@ function getZoomRatio() {
   return parseFloat(zoom_ratio || '0');
 }
 
-// Predicate to check whether the selected modifier key (and only it) is active
-// in an event.
+// Predicate to check whether the selected modifier key is active in an event.
 function checkModifier(modifier, e) {
   switch (modifier) {
     case 'None':
-      return !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey;
+      return true;
     case 'Ctrl':
-      return e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey;
+      return e.ctrlKey;
     case 'Alt':
-      return !e.ctrlKey && e.altKey && !e.metaKey && !e.shiftKey;
+      return e.altKey;
     case 'Meta':
-      return !e.ctrlKey && !e.altKey && e.metaKey && !e.shiftKey;
+      return e.metaKey;
     case 'Ctrl+Alt':
-      return e.ctrlKey && e.altKey && !e.metaKey && !e.shiftKey;
+      return e.ctrlKey && e.altKey;
     case 'Ctrl+Shift':
-      return e.ctrlKey && !e.altKey && !e.metaKey && e.shiftKey;
+      return e.ctrlKey && e.shiftKey;
     case 'Alt+Shift':
-      return !e.ctrlKey && e.altKey && !e.metaKey && e.shiftKey;
+      return e.altKey && e.shiftKey;
     default:
       return false;
   }

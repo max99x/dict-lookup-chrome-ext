@@ -1,7 +1,8 @@
 <html>
   <script>
     // API URLs.
-    var DICT_API_URL = 'http://www.onelook.com/?other=web1913&w=%query%&xml=1'
+    var DICT_API_URL = 'http://lookup.max99x.com/%query%';
+    var AUDIO_API_URL = 'http://commons.wikimedia.org/w/index.php?title=File:%file%&action=edit&externaledit=true&mode=file';
 
     // Helpers to store and access objects in local storage.
     Storage.prototype.setObject = function(key, value) {
@@ -43,13 +44,14 @@
       xhr.open('GET', url, true);
       xhr.send();
     }
-        
+            
     // Server procedure for content script.
     // Receives a request containing two parameters:
     //   method:
-    //     "lookup" for a Google Dictionary lookup
+    //     "lookup" for a Dictionary lookup.
     //     "retrieve" to retrieve an object from local storage.
     //     "store" to store an object in the local storage.
+    //     "get_audio" to look up the URL of a given Wikimedia audio file.
     //   arg: the term to look up or the name of the object to retrieve/store.
     //   arg2: the object to store. Used only with "store".
     chrome.extension.onRequest.addListener(function(request, sender, callback) {
@@ -61,8 +63,24 @@
         localStorage.setObject(request.arg, request.arg2);
         callback('');
       } else if (request.method == 'lookup') {
-        // Lookup a term from the dictionary using the Ajax API.
-        sendAjaxRequest(DICT_API_URL.replace('%query%', request.arg), callback);
+        // Look up a term from the dictionary using the Ajax API.
+        var url = DICT_API_URL.replace('%query%', request.arg);
+        
+        sendAjaxRequest(url, function(resp) {
+          callback(JSON.parse(resp));
+        });
+      } else if (request.method == 'get_audio') {
+        // Look up the URL of a given Wikimedia audio file.
+        var url = AUDIO_API_URL.replace('%file%', request.arg);
+        
+        sendAjaxRequest(url, function(resp) {
+          var url_match = resp.match(/URL=(.+)/);
+          if (url_match && url_match.length == 2) {
+            callback(url_match[1]);
+          } else {
+            callback('');
+          }
+        });
       } else {
         // Invalid request method. Ignore it.
         callback('');
@@ -70,11 +88,12 @@
     });
     
     // If new version is loaded, show the options page.
-    saved_version = localStorage.getObject('version');
+    var current_version = chrome.extension.getVersion();
+    current_version = current_version.split('.')[0] + '.' + current_version.split('.')[1];
+    
+    var saved_version = localStorage.getObject('version');
     if (saved_version) {
       saved_version = saved_version.split('.')[0] + '.' + saved_version.split('.')[1];
-      current_version = chrome.extension.getVersion();
-      current_version = current_version.split('.')[0] + '.' + current_version.split('.')[1];
     }
     if (saved_version != current_version) {
       localStorage.setObject('version', current_version);

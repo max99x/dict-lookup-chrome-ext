@@ -54,7 +54,7 @@
   -webkit-transition: opacity 0.35s linear;
 }
 
-#chrome_ggl_dict_ext span, #chrome_ggl_dict_ext img, #chrome_ggl_dict_ext a, #chrome_ggl_dict_ext b, #chrome_ggl_dict_ext em, #chrome_ggl_dict_ext i {
+#chrome_ggl_dict_ext span, #chrome_ggl_dict_ext img, #chrome_ggl_dict_ext a, #chrome_ggl_dict_ext em, #chrome_ggl_dict_ext strong {
   display: inline;
 }
 
@@ -98,12 +98,17 @@
   list-style: decimal;
 }
       
-#chrome_ggl_dict_ext b {
+#chrome_ggl_dict_ext strong {
   font-weight: bold;
 }
+      
+#chrome_ggl_dict_ext em {
+  font-style: italic;
+}
 
-#chrome_ggl_dict_ext audio {
-  visibility: none !important;
+#chrome_ggl_dict_ext p {
+  margin-left: 10px;
+  margin-top: 10px;
 }
 
 #chrome_ggl_dict_ext_handle, #chrome_ggl_dict_ext_back {
@@ -151,7 +156,11 @@
   overflow-y: scroll;
   height: inherit;
   width: auto;
-  padding-right: 10px;
+  padding-right: 10px !important;
+}
+
+#chrome_ggl_dict_ext_spacer {
+  height: 20px;
 }
 
 #chrome_ggl_dict_ext .chrome_ggl_dict_ext_title {
@@ -164,9 +173,16 @@
   white-space: nowrap;
 }
 
-#chrome_ggl_dict_ext .chrome_ggl_dict_ext_speaker {
+#chrome_ggl_dict_ext .chrome_ggl_dict_ext_audio {
+  margin-left: 1em;
+}
+
+#chrome_ggl_dict_ext .chrome_ggl_dict_ext_audio img {
   margin-left: 0.5em;
-  vertical-align: text-bottom;
+}
+
+#chrome_ggl_dict_ext .chrome_ggl_dict_ext_speaker {
+  vertical-align: bottom;
   cursor: pointer;
 }
 
@@ -174,33 +190,12 @@
   opacity: 0.7;
 }
 
-#chrome_ggl_dict_ext #chrome_ggl_dict_ext_logo {
-  display: none;
-  float: right;
-  position: relative;
-  top: 4px;
-  text-align: right;
-  font-size: 65%;
-  letter-spacing: 0.25em;
-  color: black !important;
-  background: transparent !important;
-  text-decoration: none !important;
-  z-index: 65001;  /* Sync with BASE_Z_INDEX+1 in lookup.js. */
-}
-
-#chrome_ggl_dict_ext_logo img {
-  background: transparent !important;
-  float: right;
-  width: 94px;
-  margin-left: 0.5em;
-}
-
 #chrome_ggl_dict_ext .chrome_ggl_dict_ext_subtitle {
   font-weight: bold;
   padding-top: 10px;
 }
 
-#chrome_ggl_dict_ext hr {
+#chrome_ggl_dict_ext .chrome_ggl_dict_ext_separator {
   margin: 20px auto 10px auto;
   height: 0px;
   width: 100%;
@@ -221,12 +216,6 @@
 
 #chrome_ggl_dict_ext .chrome_ggl_dict_ext_headword {
   font-weight: bold;
-}
-
-#chrome_ggl_dict_ext .chrome_ggl_dict_ext_references a, .chrome_ggl_dict_ext_references a:hover {
-  display: block;
-  color: green !important;
-  text-decoration: underline;
 }
 
 #chrome_ggl_dict_ext_form * {
@@ -276,22 +265,26 @@
   height: 10px;
 }
 
-#chrome_ggl_dict_ext_star {
-  margin-right: 10px;
-  margin-top: 0.3em;
-  vertical-align: top;
-  cursor: pointer;
+#chrome_ggl_dict_ext .label {
+  color: #666666 !important;
+  font-size: 0.85em;
 }
 
-#chrome_ggl_dict_ext .chrome_ggl_dict_ext_label {
+#chrome_ggl_dict_ext .label:before {
+  content: '(';
+}
+
+#chrome_ggl_dict_ext .label:after {
+  content: ')';
+}
+
+#chrome_ggl_dict_ext .chrome_ggl_dict_ext_pos {
   border-left: 1px #BBBBBB dotted;
-  padding-left: 0.5em;
-  xmargin-left: 0.5em;
+  padding-left: 0.5em !important;
+  margin-left: 0.5em !important;
   color: #666666 !important;
   font-size: 0.85em;
   white-space: nowrap;
-}
-
-#chrome_ggl_dict_ext #chrome_ggl_dict_ext_conjugates {
-  margin-top: 0.75em;
+  display: inline-block;
+  text-transform: lowercase;
 }
