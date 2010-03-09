@@ -13,7 +13,6 @@
   }],
   "permissions": [
     "tabs",
-    "http://localhost/",
     "http://lookup.max99x.com/",
     "http://commons.wikimedia.org/"
   ]
