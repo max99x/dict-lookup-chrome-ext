@@ -441,7 +441,7 @@ function createHtmlFromLookup(query, dict_entry) {
         buffer.push('<img class="' + ROOT_ID + '_speaker" src="' + SPEAKER_ICON_URL + '" title="Listen">');
         buffer.push(' (' + audio.type + ')');
         if (options.showAudioLinks) {
-          buffer.push('<a href="' + AUDIO_LINK_TEMPLATE.replace('%file%', audio.file) + '">');
+          buffer.push('<a href="' + AUDIO_LINK_TEMPLATE.replace('%file%', audio.file) + '" target="_blank">');
           buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Wikimedia Commons File Description">');
           buffer.push('</a>');
         }
