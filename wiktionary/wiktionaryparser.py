@@ -26,7 +26,7 @@ RE_IPA = re.compile(r'<span class="IPA">(/.*?/)</span>', re.UNICODE)
 RE_BULLET_ITEMS = re.compile(r'^\*(.+)$', re.MULTILINE | re.UNICODE)
 RE_HASH_LINES = re.compile(r'^#(.+)$', re.MULTILINE | re.UNICODE)
 RE_EXAMPLE_START = re.compile(r'^([*#][:#*]?|:)')
-RE_TAG = re.compile(r'<[^>]*>')
+RE_TAG = re.compile(r'<(?!/?(?:em|strong)>)[^>]*>|<em></em>|<strong></strong>')
 RE_INNER_LINK = re.compile(r'\[\[(.+?)(?:\|.*?)?\]\]', re.UNICODE)
 RE_STRONG = re.compile(r"'''(.*?)'''", re.UNICODE | re.DOTALL)
 RE_EMPHASIS = re.compile(r"''(.*?)''", re.UNICODE | re.DOTALL)
@@ -36,7 +36,8 @@ RE_EXAMPLE_BREAK = re.compile(r'(?:^|(?<=[^\w<]))(?=[<\'"\w])(.+)', re.UNICODE)
 RE_INIT_YEAR = re.compile(r"^(?:\W|<[^>]*>)*'''\d{4}'''", re.UNICODE)
 RE_QUALIFIER_TAG = re.compile(r'<span class="qualifier-[^>"]*">.*?</span>', re.UNICODE | re.DOTALL)
 RE_QUALIFIER_CONTENT = re.compile(r'<span class="qualifier-content">(.*?)</span>', re.UNICODE | re.DOTALL)
-RE_QUALIFIER_UNFORMATTED = re.compile(r'^(\W+)\(([^()]+)\)', re.UNICODE | re.DOTALL)
+RE_QUALIFIER_UNFORMATTED = re.compile(r'^(\W*)(?:<em>)?\(([^()]+)\)(?:</em>)?', re.UNICODE | re.DOTALL)
+RE_VERIFICATION_REQUEST = re.compile(r'<span style="color:#777777">.*?Requests_for_verification.*?</span>', re.UNICODE | re.DOTALL)
 
 RE_SYNONYM_SECTIONS = _createSectionRegex(3, ['Synonyms'])
 RE_ANTONYM_SECTIONS = _createSectionRegex(3, ['Antonyms'])
@@ -135,6 +136,8 @@ def _evalWikiMarkup(text):
         return (r'<a href="http://en.wiktionary.org/wiki/%s">%s</a>' %
                 (escaped_term, link_text))
 
+    # Strip verification requests.
+    text = RE_VERIFICATION_REQUEST.sub('', text)
     # Fix qualifiers that are not in proper tags.
     new_text = None
     while text != new_text:
@@ -145,6 +148,7 @@ def _evalWikiMarkup(text):
     qualifiers = RE_QUALIFIER_CONTENT.findall(text)
     if qualifiers:
         qualifiers = [RE_TAG.sub('', i) for i in qualifiers]
+        #qualifiers = filter(None, [RE_TAG.sub('', i) for i in qualifiers])
         qualifiers = '<span class="label">' + ', '.join(qualifiers) + '</span> '
     else:
         qualifiers = ''
@@ -192,7 +196,8 @@ def parseRelated(page):
     return _getLinksInSection(page, RE_RELATED_SECTIONS)
 
 def parseEtymology(page):
-    return [_evalWikiMarkup(j) for i, j in RE_ETYMOLOGY_SECTIONS.findall(page)]
+    return [_evalWikiMarkup(j) for i, j in RE_ETYMOLOGY_SECTIONS.findall(page)
+            if 'You can help Wiktionary by giving it' not in j]
 
 def parseMeanings(page):
     def isExampleLine(line):
