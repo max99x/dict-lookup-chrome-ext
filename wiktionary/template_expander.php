@@ -63,8 +63,9 @@ function stop($parser, $element) {
   
   if ($element != 'PAGE') return;
   
-  fwrite($dst, '<page title="'.$title.'" xml:space="preserve">');
-  fwrite($dst, htmlentities(expandTemplate($title, $text)));
+  fwrite($dst, '<page title="'.htmlspecialchars($title, ENT_QUOTES).'" xml:space="preserve">');
+  fwrite($dst, str_replace(array('&', '<', '>'), array('&amp;', '&lt;', '&gt;'),
+                           expandTemplate($title, $text)));
   fwrite($dst, '</page>');
   
   $index++;

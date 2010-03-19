@@ -33,7 +33,7 @@ class ExpatReader(object):
         finally:
             f.close()
 
-def ImportPage(title, page, cursor):
+def importPage(title, page, cursor):
     meanings = parseMeanings(page)
     related = parseRelated(page)
     synonyms = parseSynonyms(page)
@@ -41,29 +41,20 @@ def ImportPage(title, page, cursor):
     ipa = parseIPA(page)
     audio = parseAudio(page)
 
-    structured_page = {
-        'meanings': meanings,
-        'related': related,
-        'synonyms': synonyms,
-        'antonyms': antonyms,
-        'ipa': ipa,
-        'audio': audio
-    }
+    structured_page = {'term': title}
+    if meanings: structured_page['meanings'] = meanings
+    if related: structured_page['related'] = related
+    if synonyms: structured_page['synonyms'] = synonyms
+    if antonyms: structured_page['antonyms'] = antonyms
+    if ipa: structured_page['ipa'] = ipa
+    if audio: structured_page['audio'] = audio
 
     json_text = json.dumps(structured_page, separators=(',', ':'))
     
-    cursor.execute('REPLACE INTO lookup VALUES(%s, %s)', [title, json_text])
+    cursor.execute('REPLACE INTO lookup VALUES(%s, %s, NULL)', [title, json_text])
 
 if __name__ == '__main__':
-    connection = MySQLdb.connect(host='localhost',
-                                 user='root',
-                                 passwd='',
-                                 db='dictionary',
-                                 charset='utf8')
-    cursor = connection.cursor()
-
-    try:
-        ExpatReader().run('articles_out3.xml', lambda x, y: ImportPage(x, y, cursor))
-    finally:
-        cursor.close()
-        connection.close()
+    with MySQLdb.connect(host='localhost', user='root', passwd='',
+                         db='dictionary', charset='utf8') as cursor:
+        ExpatReader().run('articles_out4.xml', lambda x, y: importPage(x, y, cursor))
+        cursor.execute('UPDATE lookup SET sdx = SOUNDEX(name)')
