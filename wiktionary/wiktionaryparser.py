@@ -40,7 +40,7 @@ RE_QUALIFIER_UNFORMATTED = re.compile(r'^(\W+)\(([^()]+)\)', re.UNICODE | re.DOT
 
 RE_SYNONYM_SECTIONS = _createSectionRegex(3, ['Synonyms'])
 RE_ANTONYM_SECTIONS = _createSectionRegex(3, ['Antonyms'])
-RE_ETYMOLOGY_SECTIONS = _createSectionRegex(3, ['Etymology'])
+RE_ETYMOLOGY_SECTIONS = _createSectionRegex(3, ['Etymology', 'Etymology 1'])
 
 RELATED_HEADERS = ['See also', 'Related terms', 'Derived terms',
                    'Coordinate terms', 'Troponyms', 'Alternative forms']
