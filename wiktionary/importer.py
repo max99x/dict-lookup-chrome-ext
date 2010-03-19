@@ -40,6 +40,7 @@ def importPage(title, page, cursor):
     antonyms = parseAntonyms(page)
     ipa = parseIPA(page)
     audio = parseAudio(page)
+    etymology = parseEtymology(page)
 
     structured_page = {'term': title}
     if meanings: structured_page['meanings'] = meanings
@@ -48,6 +49,7 @@ def importPage(title, page, cursor):
     if antonyms: structured_page['antonyms'] = antonyms
     if ipa: structured_page['ipa'] = ipa
     if audio: structured_page['audio'] = audio
+    if etymology: structured_page['etymology'] = etymology[0]
 
     json_text = json.dumps(structured_page, separators=(',', ':'))
     

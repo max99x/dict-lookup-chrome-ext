@@ -40,6 +40,7 @@ RE_QUALIFIER_UNFORMATTED = re.compile(r'^(\W+)\(([^()]+)\)', re.UNICODE | re.DOT
 
 RE_SYNONYM_SECTIONS = _createSectionRegex(3, ['Synonyms'])
 RE_ANTONYM_SECTIONS = _createSectionRegex(3, ['Antonyms'])
+RE_ETYMOLOGY_SECTIONS = _createSectionRegex(3, ['Etymology'])
 
 RELATED_HEADERS = ['See also', 'Related terms', 'Derived terms',
                    'Coordinate terms', 'Troponyms', 'Alternative forms']
@@ -108,12 +109,12 @@ RE_SECTION = re.compile(r'''
 
 def _getLinksInSection(page, section_regex):
     raw_sections = section_regex.findall(page)
-    related = []
+    links = []
     for title, content in raw_sections:
         content_lines = RE_BULLET_ITEMS.findall(content)
         for line in content_lines:
-            related += RE_INNER_LINK.findall(line)
-    return [i for i in related if ':' not in i]
+            links += RE_INNER_LINK.findall(line)
+    return [i for i in links if ':' not in i]
 
 def _evalWikiMarkup(text):
     # Order matters!
@@ -153,8 +154,11 @@ def _evalWikiMarkup(text):
     text = qualifiers + text
     # Evaluate links.
     text = RE_LINK.sub(formatLink, text)
+    # Remove duplicate quotes.
     # Remove extraneous spaces.
+    text = text.replace(u'\u201c\u2018', u'\u201c').replace(u'\u2019\u201d', u'\u201d')
     text = RE_MULTISPACE.sub(' ', text).strip()
+    
 
     if text.startswith("''") and "''" not in text[1:]:
         text = '<em>' + text[2:] + '</em>'
@@ -187,6 +191,9 @@ def parseAntonyms(page):
 
 def parseRelated(page):
     return _getLinksInSection(page, RE_RELATED_SECTIONS)
+
+def parseEtymology(page):
+    return [_evalWikiMarkup(j) for i, j in RE_ETYMOLOGY_SECTIONS.findall(page)]
 
 def parseMeanings(page):
     def isExampleLine(line):
