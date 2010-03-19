@@ -155,11 +155,10 @@ def _evalWikiMarkup(text):
     # Evaluate links.
     text = RE_LINK.sub(formatLink, text)
     # Remove duplicate quotes.
-    # Remove extraneous spaces.
     text = text.replace(u'\u201c\u2018', u'\u201c').replace(u'\u2019\u201d', u'\u201d')
+    # Remove extraneous spaces.
     text = RE_MULTISPACE.sub(' ', text).strip()
-    
-
+    # Fix unmatched emphasis wiki tags.
     if text.startswith("''") and "''" not in text[1:]:
         text = '<em>' + text[2:] + '</em>'
     
