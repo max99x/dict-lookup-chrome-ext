@@ -67,7 +67,7 @@
         var url = DICT_API_URL.replace('%query%', request.arg);
         
         sendAjaxRequest(url, function(resp) {
-          callback(JSON.parse(resp));
+          callback(JSON.parse(resp || '{}'));
         });
       } else if (request.method == 'get_audio') {
         // Look up the URL of a given Wikimedia audio file.

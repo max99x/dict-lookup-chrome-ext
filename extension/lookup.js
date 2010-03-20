@@ -11,6 +11,8 @@ var BASE_Z_INDEX = 65000;
 // URL constants.
 var EXTERN_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/%query%';
 var AUDIO_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/File:%file%';
+var GOOGLE_DICT_LINK_TEMPLATE = 'http://www.google.com/dictionary?langpair=en|en&q=%query%&hl=en&aq=f';
+var THE_FREE_DICT_LINK_TEMPLATE = 'http://www.tfd.com/p/%query%';
 var SPEAKER_ICON_URL = chrome.extension.getURL('img/speaker.png');
 var HANDLE_ICON_URL = chrome.extension.getURL('img/handle.png');
 var BACK_ICON_URL = chrome.extension.getURL('img/back.png');
@@ -49,7 +51,8 @@ var options = {
   showRelated: false,
   showSynonyms: true,
   showAntonyms: false,
-  showLinks: false
+  showLinks: false,
+  showEtymology: false
 }
 
 /***************************************************************
@@ -369,13 +372,22 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
 }
 
 function registerAudioIcon(icon, filename) {
+  function playAudio(url, src_element) {
+    new Audio(url).addEventListener('canplaythrough', function() {
+      this.play();
+      src_element.style.cursor = 'auto';
+    });
+  }
+
   icon.addEventListener('click', function(e) {
+    var src_element = this;
+    src_element.style.cursor = 'progress';
     if (audio_cache[filename]) {
-      new Audio(audio_cache[filename]).play();
+      playAudio(audio_cache[filename], src_element);
     } else {
       chrome.extension.sendRequest({method: 'get_audio', arg: filename}, function(url) {
         audio_cache[filename] = url;
-        new Audio(url).play();
+        playAudio(url, src_element);
       });
     }
   });
@@ -408,33 +420,65 @@ function removePopup(do_frame, do_form) {
 }
 
 function createHtmlFromLookup(query, dict_entry) {
+  function maybeStripLinks(text) {
+    return options.showLinks ? text : text.replace(/<a[^>]*>([^<>]*)<\/a>/g, '$1');
+  }
+  
   var buffer = [];
   
   buffer.push('<div id="' + ROOT_ID + '_content">');
   
   if (!dict_entry.meanings || dict_entry.meanings.length == 0) {
-    buffer.push('<div style="display: table; padding-top: 3em; width: 100%;"><div style="display: table-cell; text-align: center; vertical-align: middle;">No definitions for <strong>' + query + '</strong>.</div></div>');
-  } else {
-    // Wiktionary link.
-    /*
-    var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', query);
-    buffer.push('<a id="' + ROOT_ID + '_logo" href="' + extern_link + '" target="_blank">');
-    buffer.push('<img src="' + GOOGLE_ICON_URL + '" />');
-    buffer.push('powered<br />by');
-    buffer.push('</a>');
-    */
+    buffer.push('<div style="display: table; padding-top: 3em; width: 100%;">');
+    buffer.push('<div style="display: table-cell; text-align: center; vertical-align: middle;">');
     
+    buffer.push('No definitions for <strong>' + query + '</strong>.');
+    if (dict_entry.suggestions) {
+      // Offer suggestions.
+      buffer.push('<br /><br />');
+      buffer.push('<em class="suggestion">');
+      buffer.push('Did you mean ');
+      for (var i = 0; i < dict_entry.suggestions.length; i++) {
+        var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', dict_entry.suggestions[i]);
+        buffer.push('<a href="' + extern_link + '">' + dict_entry.suggestions[i] + '</a>');
+        if (i == dict_entry.suggestions.length - 1) {
+          buffer.push('?');
+        } else if (i == dict_entry.suggestions.length - 2) {
+          buffer.push(' or ');
+        } else {
+          buffer.push(', ');
+        }
+      }
+      buffer.push('</em>');
+    } else {
+      // If there are no suggestions, suggest other sources.
+      buffer.push('<br /><br />');
+      buffer.push('Try the same query in ');
+      buffer.push('<a class="alternate_source" href="' + GOOGLE_DICT_LINK_TEMPLATE.replace('%query%', query) + '" target="_blank">');
+      buffer.push('Google Dictionary');
+      buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Lookup in the Google Dictionary">');
+      buffer.push('</a>');
+      buffer.push(' or ');
+      buffer.push('<a class="alternate_source" href="' + THE_FREE_DICT_LINK_TEMPLATE.replace('%query%', query) + '" target="_blank">');
+      buffer.push('The Free Dictionary');
+      buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Lookup in the Google Dictionary">');
+      buffer.push('</a>');
+    }
+    
+    buffer.push('</div>');
+    buffer.push('</div>');
+  } else {
     // Header with formatted query and pronunciation.
     buffer.push('<div class="' + ROOT_ID + '_header">');
-    buffer.push('<span class="' + ROOT_ID + '_title">' + unescape(query) + '</span>');
+    buffer.push('<span class="' + ROOT_ID + '_title">' + (dict_entry.term || query) + '</span>');
     
-    if (options.showIPA && dict_entry.ipa.length) {
+    if (options.showIPA && dict_entry.ipa && dict_entry.ipa.length) {
       for (var i in dict_entry.ipa) {
         buffer.push('<span class="' + ROOT_ID + '_phonetic" title="Phonetic">' + dict_entry.ipa[i] + '</span>');
       }
     }
     
-    if (options.showAudio && dict_entry.audio.length) {
+    if (options.showAudio && dict_entry.audio && dict_entry.audio.length) {
       for (var i in dict_entry.audio) {
         var audio = dict_entry.audio[i];
         buffer.push('<span class="' + ROOT_ID + '_audio" data-src="' + audio.file + '">');
@@ -456,16 +500,15 @@ function createHtmlFromLookup(query, dict_entry) {
     for (var i in dict_entry.meanings) {
       var meaning = dict_entry.meanings[i];
       buffer.push('<li>');
-      if (!options.showLinks) {
-        meaning.content = meaning.content.replace(/<a[^>]*>([^<>]*)<\/a>/g, '$1');
-      }
+      meaning.content = maybeStripLinks(meaning.content);
       buffer.push(meaning.content);
       if (options.showPOS) {
         buffer.push('<span class="' + ROOT_ID + '_pos">' + meaning.type + '</span>');
       }
-      if (options.showExamples && meaning.examples) {
+      if (options.showExamples && meaning.examples && meaning.examples.length) {
         buffer.push('<ul class="' + ROOT_ID + '_examples">');
         for (var j in meaning.examples) {
+          meaning.examples[j] = maybeStripLinks(meaning.examples[j]);
           buffer.push('<li>' + meaning.examples[j] + '</li>');
         }
         buffer.push('</ul');
@@ -475,8 +518,16 @@ function createHtmlFromLookup(query, dict_entry) {
     }
     buffer.push('</ol>');
     
+    // Etymology
+    if (options.showEtymology && dict_entry.etymology) {
+      buffer.push('<hr class="' + ROOT_ID + '_separator" />');
+      buffer.push('<div class="' + ROOT_ID + '_subtitle">Etymology</div>');
+      dict_entry.etymology = maybeStripLinks(dict_entry.etymology);
+      buffer.push('<p>' + dict_entry.etymology + '</p>');
+    }
+    
     // Synonyms
-    if (options.showSynonyms && dict_entry.synonyms.length) {
+    if (options.showSynonyms && dict_entry.synonyms && dict_entry.synonyms.length) {
       buffer.push('<hr class="' + ROOT_ID + '_separator" />');
       buffer.push('<div class="' + ROOT_ID + '_subtitle">Synonyms</div>');
       
@@ -492,7 +543,7 @@ function createHtmlFromLookup(query, dict_entry) {
     }
     
     // Antonyms
-    if (options.showAntonyms && dict_entry.antonyms.length) {
+    if (options.showAntonyms && dict_entry.antonyms && dict_entry.antonyms.length) {
       buffer.push('<hr class="' + ROOT_ID + '_separator" />');
       buffer.push('<div class="' + ROOT_ID + '_subtitle">Antonyms</div>');
       
@@ -508,7 +559,7 @@ function createHtmlFromLookup(query, dict_entry) {
     }
     
     // Related
-    if (options.showRelated && dict_entry.related.length) {
+    if (options.showRelated && dict_entry.related && dict_entry.related.length) {
       buffer.push('<hr class="' + ROOT_ID + '_separator" />');
       buffer.push('<div class="' + ROOT_ID + '_subtitle">See also</div>');
       
@@ -682,6 +733,7 @@ function makeMoveable(box, margin) {
 
   box.addEventListener('mousedown', function(e) {
     var y = box.offsetTop;
+    if (box.style.position == 'fixed') y += document.body.scrollTop;
     var zoom_ratio = getZoomRatio();
     var mouse_y = e.pageY / zoom_ratio;
     if (mouse_y >= y && mouse_y <= y + margin * zoom_ratio) {
@@ -699,12 +751,13 @@ function makeMoveable(box, margin) {
 function isClickInsideFrame(e) {
   frame_ref = document.getElementById(ROOT_ID);
   if (frame_ref) {
+    var x, y;
     if (frame_ref.style.position == 'absolute') {
-      var x = e.pageX;
-      var y = e.pageY;
+      x = e.pageX;
+      y = e.pageY;
     } else if (frame_ref.style.position == 'fixed') {
-      var x = e.clientX;
-      var y = e.clientY;
+      x = e.clientX;
+      y = e.clientY;
     }
     
     var zoom_ratio = getZoomRatio();

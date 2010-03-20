@@ -288,3 +288,12 @@
   display: inline-block;
   text-transform: lowercase;
 }
+
+#chrome_ggl_dict_ext .alternate_source {
+  text-decoration: none;
+  color: #666666 !important;
+}
+
+#chrome_ggl_dict_ext .suggestion * {
+  font-style: italic !important;
+}

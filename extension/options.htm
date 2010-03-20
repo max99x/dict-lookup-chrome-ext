@@ -35,7 +35,7 @@
       checkboxes = ['shortcutEnable', 'shortcutSelection', 'hideWithEscape',
                     'saveFrameSize', 'showExamples', 'showPOS', 'showLabels',
                     'showIPA', 'showAudio', 'showAudioLinks', 'showRelated',
-                    'showSynonyms', 'showAntonyms', 'showLinks'];
+                    'showSynonyms', 'showAntonyms', 'showLinks', 'showEtymology'];
       textboxes  = ['frameWidth', 'frameHeight', 'queryFormWidth'];
   
       // Restores state from localStorage.
@@ -61,6 +61,7 @@
         document.getElementById('showSynonyms').checked = true;
         document.getElementById('showAntonyms').checked = false;
         document.getElementById('showLinks').checked = false;
+        document.getElementById('showEtymology').checked = false;
       
         // Override defaults by saved settings.
         for (var i in selects) {
@@ -290,6 +291,10 @@
         <div class="field">
           <label for="showExamples">Examples:</label>
           <input type="checkbox" id="showExamples" />
+        </div>
+        <div class="field">
+          <label for="showEtymology">Etymology:</label>
+          <input type="checkbox" id="showEtymology" />
         </div>
         <div class="field">
           <label for="showPOS">Part of speech labels:</label>

@@ -1,6 +1,6 @@
 {
   "name": "Dictionary Lookup",
-  "version": "4.0",
+  "version": "4.1",
   "description": "Look up any word in an inline frame with a simple click and without leaving the page.",
   "icons": { "128": "img/icon.png" },
   "options_page": "options.htm",
