@@ -455,14 +455,15 @@ function createHtmlFromLookup(query, dict_entry) {
       buffer.push('<br /><br />');
       buffer.push('Try the same query in ');
       buffer.push('<a class="alternate_source" href="' + GOOGLE_DICT_LINK_TEMPLATE.replace('%query%', query) + '" target="_blank">');
-      buffer.push('Google Dictionary');
-      buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Lookup in the Google Dictionary">');
+      buffer.push('Google Dictionary ');
+      buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Lookup in Google Dictionary">');
       buffer.push('</a>');
       buffer.push(' or ');
       buffer.push('<a class="alternate_source" href="' + THE_FREE_DICT_LINK_TEMPLATE.replace('%query%', query) + '" target="_blank">');
-      buffer.push('The Free Dictionary');
-      buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Lookup in the Google Dictionary">');
+      buffer.push('The Free Dictionary ');
+      buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Lookup in The Free Dictionary">');
       buffer.push('</a>');
+      buffer.push('.');
     }
     
     buffer.push('</div>');

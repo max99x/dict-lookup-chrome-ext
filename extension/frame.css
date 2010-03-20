@@ -291,7 +291,12 @@
 
 #chrome_ggl_dict_ext .alternate_source {
   text-decoration: none;
-  color: #666666 !important;
+  color: #666 !important;
+}
+
+#chrome_ggl_dict_ext .alternate_source:hover {
+  text-decoration: underline;
+  color: #555 !important;
 }
 
 #chrome_ggl_dict_ext .suggestion * {
