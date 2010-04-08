@@ -37,6 +37,7 @@ RE_EXAMPLE_BREAK = re.compile(r'(?:^|(?<=[^\w<])(?<!\[\[))(?=[<\[\'"\w])(.+)', r
 RE_INIT_YEAR = re.compile(r"^(?:\W|<[^>]*>)*'''\d{4}'''", re.UNICODE)
 RE_QUALIFIER_TAG = re.compile(r'<span class="qualifier-[^>"]*">.*?</span>', re.UNICODE | re.DOTALL)
 RE_QUALIFIER_CONTENT = re.compile(r'<span class="qualifier-content">(.*?)</span>', re.UNICODE | re.DOTALL)
+RE_QUALIFIER_TITLE = re.compile(r'<span title="[^>]*">(.*?)</span>', re.UNICODE | re.DOTALL)
 RE_QUALIFIER_UNFORMATTED = re.compile(r'^(\W*)(?:<em>)?\(([^()]+)\)(?:</em>)?', re.UNICODE | re.DOTALL)
 RE_VERIFICATION_REQUEST = re.compile(r'<span style="color:#777777">.*?Requests_for_verification.*?</span>', re.UNICODE | re.DOTALL)
 
@@ -145,6 +146,8 @@ def _evalWikiMarkup(text):
         if new_text: text = new_text
         new_text = RE_QUALIFIER_UNFORMATTED.sub(r'\1<span class="qualifier-content">\2</span>', text)
     text = text.replace('<span class="ib-comma"><span class="qualifier-comma">,</span></span>', ', ')
+    # Remove title spans from qualifiers.
+    text = RE_QUALIFIER_TITLE.sub('', text)
     # Extract all qualifiers and reformat them.
     qualifiers = RE_QUALIFIER_CONTENT.findall(text)
     if qualifiers:
