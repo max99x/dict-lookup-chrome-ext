@@ -147,7 +147,7 @@ def _evalWikiMarkup(text):
         new_text = RE_QUALIFIER_UNFORMATTED.sub(r'\1<span class="qualifier-content">\2</span>', text)
     text = text.replace('<span class="ib-comma"><span class="qualifier-comma">,</span></span>', ', ')
     # Remove title spans from qualifiers.
-    text = RE_QUALIFIER_TITLE.sub('', text)
+    text = RE_QUALIFIER_TITLE.sub(r'\1', text)
     # Extract all qualifiers and reformat them.
     qualifiers = RE_QUALIFIER_CONTENT.findall(text)
     if qualifiers:
