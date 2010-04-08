@@ -264,6 +264,9 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
   // Unique class to differentiate between frame instances.
   frame.className = ROOT_ID + (new Date()).getTime();
   body.appendChild(frame);
+        
+  // Make frame draggable by its top.
+  makeMoveable(frame, PADDING_TOP);
   
   // Start loading frame data.
   chrome.extension.sendRequest({method: 'lookup', arg: query}, function(response) {
@@ -279,9 +282,6 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
         handle.style.background = 'url("' + HANDLE_ICON_URL + '") !important';
         
         makeResizeable(frame, handle);
-        
-        // Make frame draggable by its top.
-        makeMoveable(frame, PADDING_TOP);
         
         // Create back link.
         if (breadcrumbs.length) {
