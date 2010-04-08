@@ -32,6 +32,7 @@ RE_STRONG = re.compile(r"(?!'{4,})'''(.*?)'''", re.UNICODE | re.DOTALL)
 RE_EMPHASIS = re.compile(r"''(.*?)''", re.UNICODE | re.DOTALL)
 RE_LINK = re.compile(r"\[\[(.*?)(?:\|(.*?))?\]\](\w*)", re.UNICODE)
 RE_LINK2 = re.compile(r"\[([^\[\]\s]*)\s([^\[\]]*)\]", re.UNICODE)
+RE_LINK_EXTERNAL = re.compile(r"(?<!\[)\[[^\[\]]*\](?!\])", re.UNICODE)
 RE_MULTISPACE = re.compile(r'[\s\xb6]{2,}', re.UNICODE)
 RE_EXAMPLE_BREAK = re.compile(r'(?:^|(?<=[^\w<])(?<!\[\[))(?=[<\[\'"\w])(.+)', re.UNICODE)
 RE_INIT_YEAR = re.compile(r"^(?:\W|<[^>]*>)*'''\d{4}'''", re.UNICODE)
@@ -163,6 +164,7 @@ def _evalWikiMarkup(text):
     # Evaluate links.
     text = RE_LINK.sub(formatLink, text)
     text = RE_LINK2.sub(formatLink, text)
+    text = RE_LINK_EXTERNAL.sub('', text)
     # Remove duplicate quotes.
     text = text.replace(u'\u201c\u2018', u'\u201c').replace(u'\u2019\u201d', u'\u201d')
     # Remove extraneous spaces.
