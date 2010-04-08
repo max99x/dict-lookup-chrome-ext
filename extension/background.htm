@@ -94,6 +94,12 @@
     var saved_version = localStorage.getObject('version');
     if (saved_version) {
       saved_version = saved_version.split('.')[0] + '.' + saved_version.split('.')[1];
+    } else {
+      // Remap default shortcut key on Mac.
+      if (navigator.platform.match('Mac')) {
+        localStorage.setObject('clickModifier', 'Meta');
+        localStorage.setObject('shortcutModifier', 'Meta');
+      }
     }
     if (saved_version != current_version) {
       localStorage.setObject('version', current_version);
