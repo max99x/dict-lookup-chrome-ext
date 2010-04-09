@@ -1,5 +1,6 @@
 from itertools import takewhile as _takewhile
 from urllib2 import quote as _urlescape
+from BeautifulSoup import BeautifulSoup as _soup
 import re
 
 def _createSectionRegex(min_level, headers):
@@ -30,9 +31,10 @@ RE_TAG = re.compile(r'<(?!/?(?:em|strong)>)[^>]*>|<em></em>|<strong></strong>')
 RE_INNER_LINK = re.compile(r'\[\[(.+?)(?:\|.*?)?\]\]', re.UNICODE)
 RE_STRONG = re.compile(r"(?!'{4,})'''(.*?)'''", re.UNICODE | re.DOTALL)
 RE_EMPHASIS = re.compile(r"''(.*?)''", re.UNICODE | re.DOTALL)
-RE_LINK = re.compile(r"\[\[(.*?)(?:\|(.*?))?\]\](\w*)", re.UNICODE)
-RE_LINK2 = re.compile(r"\[([^\[\]\s]*)\s([^\[\]]*)\]", re.UNICODE)
-RE_LINK_EXTERNAL = re.compile(r"(?<!\[)\[[^\[\]]*\](?!\])", re.UNICODE)
+RE_LINK = re.compile(r'\[\[(.*?)(?:\|(.*?))?\]\](\w*)', re.UNICODE)
+RE_LINK2 = re.compile(r'\[([^\[\]\s]*)\s([^\[\]]*)\]', re.UNICODE)
+RE_LINK_EXTERNAL = re.compile(r'(?<!\[)\[[^\[\]]*\](?!\])', re.UNICODE)
+RE_INTERPROJECT = re.compile(r'<span class="interProject">.*?</span>', re.UNICODE)
 RE_MULTISPACE = re.compile(r'[\s\xb6]{2,}', re.UNICODE)
 RE_EXAMPLE_BREAK = re.compile(r'(?:^|(?<=[^\w<])(?<!\[\[))(?=[<\[\'"\w])(.+)', re.UNICODE)
 RE_INIT_YEAR = re.compile(r"^(?:\W|<[^>]*>)*'''\d{4}'''", re.UNICODE)
@@ -157,6 +159,12 @@ def _evalWikiMarkup(text):
         qualifiers = '<span class="label">' + ', '.join(qualifiers) + '</span> '
     else:
         qualifiers = ''
+    # Remove wikipedia links.
+    parsed_html = _soup(text)
+    wikilinks = parsed_html.findAll('div', attrs={'class': lambda x: x and 'sister-project' in x})
+    for i in wikilinks: i.replaceWith('')
+    text = parsed_html.renderContents().decode('utf8')
+    text = RE_INTERPROJECT.sub('', text)
     # Put qualifiers back and get rid of unnecessary tags.
     text = RE_QUALIFIER_TAG.sub('', text)
     text = RE_TAG.sub('', text)
