@@ -95,10 +95,11 @@
     if (saved_version) {
       saved_version = saved_version.split('.')[0] + '.' + saved_version.split('.')[1];
     } else {
-      // Remap default shortcut key on Mac.
+      // Remap default shortcut on Mac to Command+D.
       if (navigator.platform.match('Mac')) {
         localStorage.setObject('clickModifier', 'Meta');
         localStorage.setObject('shortcutModifier', 'Meta');
+        localStorage.setObject('shortcutKey', 'D');
       }
     }
     if (saved_version != current_version) {
