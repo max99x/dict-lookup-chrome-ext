@@ -22,6 +22,7 @@ var GRADIENT_DOWN_URL = chrome.extension.getURL('img/gradient_down.png');
 var GRADIENT_UP_URL = chrome.extension.getURL('img/gradient_up.png');
 // Regexes.
 var DICT_LINK_REGEX = /^http:\/\/en\.wiktionary\.org\/wiki\/([^:]*)$/;
+var TITLE_CLASS_REGEX = RegExp('(^|\s)' +  ROOT_ID + '_title(\s|$)')
 
 // Internal global vars.
 var body = document.getElementsByTagName('body')[0];
@@ -306,7 +307,7 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
         // Hook into dictionary links.
         var links = frame.getElementsByTagName('a');
         for (var i in links) {
-          if (links[i].href && DICT_LINK_REGEX.test(links[i].href)) {
+          if (links[i].href && DICT_LINK_REGEX.test(links[i].href) && !TITLE_CLASS_REGEX.test(links[i].className)) {
             links[i].addEventListener('click', function(e) {
               if (e.which == 1) {
                 var link_word = this.href.match(DICT_LINK_REGEX)[1];
@@ -470,7 +471,8 @@ function createHtmlFromLookup(query, dict_entry) {
   } else {
     // Header with formatted query and pronunciation.
     buffer.push('<div class="' + ROOT_ID + '_header">');
-    buffer.push('<span class="' + ROOT_ID + '_title">' + (dict_entry.term || query) + '</span>');
+    var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', (dict_entry.term || query));
+    buffer.push('<a class="' + ROOT_ID + '_title" href="' + extern_link + '" target="_blank">' + (dict_entry.term || query) + '</a>');
     
     if (options.showIPA && dict_entry.ipa && dict_entry.ipa.length) {
       for (var i in dict_entry.ipa) {

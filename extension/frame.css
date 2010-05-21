@@ -166,6 +166,8 @@
 #chrome_ggl_dict_ext .chrome_ggl_dict_ext_title {
   font-weight: bold;
   font-size: 125%;
+  text-decoration: none;
+  color: black !important;
 }
 
 #chrome_ggl_dict_ext .chrome_ggl_dict_ext_phonetic {
