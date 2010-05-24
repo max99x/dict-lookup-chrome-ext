@@ -191,24 +191,36 @@
         width: 2.25em;
       }
       input[type=button] {
-        margin: auto;
-        margin-bottom: 10px;
-        margin-top: -10px;
-        background-image: -webkit-gradient(linear, left top, left bottom, from(#BBBBBB), to(gray));
-        color: white;
-        border: none;
-        border-radius: 15px;
-        text-shadow: rgba(0, 0, 0, 0.4) 0px -1px 1px;
-        font-weight: bold;
-        padding: 2px 13px 3px 12px;
         display: block;
+        position: fixed;
+        top: 45%;
+        right: -2px;
+        text-align: center;
+        color: white;
+        font-weight: bold;
+        text-shadow: rgba(0, 0, 0, 0.2) 0px -1px 1px;
+        background-image: -webkit-gradient(linear, left top, left bottom, from(#BBB), to(#888));
+        border: 1px grey solid;
+        border-right: none;
+        border-radius: 15px 0px 0px 15px;
+        padding: 10px 20px;
+        -webkit-transition: opacity 1.5s ease;
+        
         cursor: pointer;
         font-size: 120%;
+        font-weight: bold;
       }
 
       input[type=button]:hover {
-        background-image: -webkit-gradient(linear, left top, left bottom, from(gray), to(#BBBBBB));
-        padding: 3px 12px 2px 13px;
+        background-image: -webkit-gradient(linear, left top, left bottom, from(#CCC), to(#777));
+      }
+
+      input[type=button]:active {
+        background-image: -webkit-gradient(linear, left top, left bottom, from(#888), to(#BBB));
+      }
+      
+      .license {
+        text-align: center;
       }
     </style>
   </head>
@@ -350,6 +362,12 @@
         <div class="field">
           <label for="saveFrameSize">Remember size:</label>
           <input type="checkbox" id="saveFrameSize" />
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>License</legend>
+        <div class="field license">
+          The definitions used in this extensions are taken from <a href="http://en.wiktionary.org/wiki/Wiktionary:Main_Page">Wiktionary</a> and are available under the <a href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution/Share-Alike License</a>; additional terms may apply. See the <a href="http://wikimediafoundation.org/wiki/Terms_of_Use">Wiktionary Terms of Use</a> for details.
         </div>
       </fieldset>
       <input type="button" onclick="saveOptions()" value="Save" />
