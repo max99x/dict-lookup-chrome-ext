@@ -36,6 +36,7 @@ RE_LINK = re.compile(r'\[\[(.*?)(?:\|(.*?))?\]\](\w*)', re.UNICODE)
 RE_LINK2 = re.compile(r'\[([^\[\]\s]*)\s([^\[\]]*)\]()', re.UNICODE)
 RE_LINK_EXTERNAL = re.compile(r'(?<!\[)\[[^\[\]]*\](?!\])', re.UNICODE)
 RE_MULTISPACE = re.compile(r'[\s\xb6]{2,}', re.UNICODE)
+RE_MENTION_TAG = re.compile(r'<span class="mention">([^<>#]+)#[^<>]*</span>', re.UNICODE)
 RE_QUALIFIER_CONTENT = re.compile(r'<span class="qualifier-content">(.*?)</span>', re.UNICODE | re.DOTALL)
 RE_QUALIFIER_TAG = re.compile(r'<span class="qualifier-[^>"]*">.*?</span>', re.UNICODE | re.DOTALL)
 RE_QUALIFIER_TITLE = re.compile(r'<span title="[^>]*">(.*?)</span>', re.UNICODE | re.DOTALL)
@@ -165,6 +166,8 @@ def _evalWikiMarkup(text):
     for i in wikilinks: i.replaceWith('')
     text = parsed_html.renderContents().decode('utf8')
     text = RE_INTERPROJECT.sub('', text)
+    # Remove hashes created by bad template expansions.
+    text = RE_MENTION_TAG.sub(r'<span class="mention">\1</span>', text)
     # Put qualifiers back and get rid of unnecessary tags.
     text = RE_QUALIFIER_TAG.sub('', text)
     text = RE_TAG.sub('', text)
@@ -180,7 +183,7 @@ def _evalWikiMarkup(text):
     # Fix unmatched emphasis wiki tags.
     if text.startswith("''") and "''" not in text[1:]:
         text = '<em>' + text[2:] + '</em>'
-    
+
     return text
 
 
