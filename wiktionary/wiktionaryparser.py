@@ -23,25 +23,25 @@ def _createSectionRegex(min_level, headers):
 
 RE_AUDIO_TAG = re.compile(r'<span class="unicode audiolink">&nbsp;\[\[:Media:([^|{}]*)\|([^|{}]*)\]\]</span>')
 RE_AUDIO_TYPE = re.compile(r'[A-Z](?:[-/\\A-Z]*[A-Z])\b')
-RE_IPA = re.compile(r'<span class="IPA">(/.*?/)</span>', re.UNICODE)
 RE_BULLET_ITEMS = re.compile(r'^\*(.+)$', re.MULTILINE | re.UNICODE)
-RE_HASH_LINES = re.compile(r'^#(.+)$', re.MULTILINE | re.UNICODE)
-RE_EXAMPLE_START = re.compile(r'^([*#][:#*]?|:)')
-RE_TAG = re.compile(r'<(?!/?(?:em|strong)>)[^>]*>|<em></em>|<strong></strong>')
-RE_INNER_LINK = re.compile(r'\[\[(.+?)(?:\|.*?)?\]\]', re.UNICODE)
-RE_STRONG = re.compile(r"(?!'{4,})'''(.*?)'''", re.UNICODE | re.DOTALL)
 RE_EMPHASIS = re.compile(r"''(.*?)''", re.UNICODE | re.DOTALL)
+RE_EXAMPLE_BREAK = re.compile(r'(?:^|(?<=[^\w<])(?<!\[\[))(?=[<\[\'"\w])(.+)', re.UNICODE)
+RE_EXAMPLE_START = re.compile(r'^([*#][:#*]?|:)')
+RE_HASH_LINES = re.compile(r'^#(.+)$', re.MULTILINE | re.UNICODE)
+RE_INIT_YEAR = re.compile(r"^(?:\W|<[^>]*>)*'''\d{4}[^a-zA-Z]*'''", re.UNICODE)
+RE_INNER_LINK = re.compile(r'\[\[(.+?)(?:\|.*?)?\]\]', re.UNICODE)
+RE_INTERPROJECT = re.compile(r'<span class="interProject">.*?</span>', re.UNICODE)
+RE_IPA = re.compile(r'<span class="IPA">(.*?)</span>', re.UNICODE)
 RE_LINK = re.compile(r'\[\[(.*?)(?:\|(.*?))?\]\](\w*)', re.UNICODE)
 RE_LINK2 = re.compile(r'\[([^\[\]\s]*)\s([^\[\]]*)\]()', re.UNICODE)
 RE_LINK_EXTERNAL = re.compile(r'(?<!\[)\[[^\[\]]*\](?!\])', re.UNICODE)
-RE_INTERPROJECT = re.compile(r'<span class="interProject">.*?</span>', re.UNICODE)
 RE_MULTISPACE = re.compile(r'[\s\xb6]{2,}', re.UNICODE)
-RE_EXAMPLE_BREAK = re.compile(r'(?:^|(?<=[^\w<])(?<!\[\[))(?=[<\[\'"\w])(.+)', re.UNICODE)
-RE_INIT_YEAR = re.compile(r"^(?:\W|<[^>]*>)*'''\d{4}[^a-zA-Z]*'''", re.UNICODE)
-RE_QUALIFIER_TAG = re.compile(r'<span class="qualifier-[^>"]*">.*?</span>', re.UNICODE | re.DOTALL)
 RE_QUALIFIER_CONTENT = re.compile(r'<span class="qualifier-content">(.*?)</span>', re.UNICODE | re.DOTALL)
+RE_QUALIFIER_TAG = re.compile(r'<span class="qualifier-[^>"]*">.*?</span>', re.UNICODE | re.DOTALL)
 RE_QUALIFIER_TITLE = re.compile(r'<span title="[^>]*">(.*?)</span>', re.UNICODE | re.DOTALL)
 RE_QUALIFIER_UNFORMATTED = re.compile(r'^(\W*)(?:<em>)?\(([^()]+)\)(?:</em>)?', re.UNICODE | re.DOTALL)
+RE_STRONG = re.compile(r"(?!'{4,})'''(.*?)'''", re.UNICODE | re.DOTALL)
+RE_TAG = re.compile(r'<(?!/?(?:em|strong)>)[^>]*>|<em></em>|<strong></strong>')
 RE_VERIFICATION_REQUEST = re.compile(r'<span style="color:#777777">.*?Requests_for_verification.*?</span>', re.UNICODE | re.DOTALL)
 
 RE_SYNONYM_SECTIONS = _createSectionRegex(3, ['Synonyms'])
@@ -244,7 +244,7 @@ def parseMeanings(page):
                             not RE_INIT_YEAR.search(i))]
             examples = filter(None, examples)
 
-            if content:
+            if content and len(content) > 3:
                 meaning = {'type': title, 'content': content}
                 if examples: meaning['examples'] = examples
                 meanings.append(meaning)

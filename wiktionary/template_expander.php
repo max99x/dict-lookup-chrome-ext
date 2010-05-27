@@ -7,8 +7,8 @@ This file should be dropped into a valid mediawiki installation with the
 templates to expand already imported (e.g. with importtemplates.py).
 
 Due to inefficiency in recursive template evaluation which needs many DB queries
-per page, the script is quite slow. It takes about an hour to expand the English
-parts of the Wiktionary dump on a mid-range PC.
+per page, the script is quite slow. You should leave it overnight to expand the
+English parts of the Wiktionary dump on a mid-range PC.
 
 */
 
