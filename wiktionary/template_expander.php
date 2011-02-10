@@ -7,15 +7,16 @@ This file should be dropped into a valid mediawiki installation with the
 templates to expand already imported (e.g. with importtemplates.py).
 
 Due to inefficiency in recursive template evaluation which needs many DB queries
-per page, the script is quite slow. You should leave it overnight to expand the
-English parts of the Wiktionary dump on a mid-range PC.
+per page, the script is extremely slow. The last time this was run, it took
+about 48 hours to expand the English parts of the Wiktionary dump on a mid-range
+PC. Make sure your server is configured not to time out.
 
 */
 
 // Parameters.
 $PRINT_PROGRESS_EVERY = 100;
-$SRC_DUMP = 'articles_out3.xml';
-$DST_DUMP = 'articles_out4.xml';
+$SRC_DUMP = $_GET['src_dump'];
+$DST_DUMP = $_GET['dst_dump'];
 
 // Template expansion.
 require_once('includes/WebStart.php');
@@ -74,13 +75,13 @@ function stop($parser, $element) {
   }
 }
 
-echo "Expanding...\n";
+echo 'Expanding...\n';
 xml_set_element_handler($parser, 'start', 'stop');
 xml_set_character_data_handler($parser, 'char');
 
 fwrite($dst, '<pages>');
 while ($data = fread($src, 4096)) {
-  xml_parse($parser, $data, feof($src)) or die(sprintf("XML Error: %s at line %d", xml_error_string(xml_get_error_code($parser)), xml_get_current_line_number($parser)));
+  xml_parse($parser, $data, feof($src)) or die(sprintf('XML Error: %s at line %d', xml_error_string(xml_get_error_code($parser)), xml_get_current_line_number($parser)));
 }
 fwrite($dst, '</pages>');
 
