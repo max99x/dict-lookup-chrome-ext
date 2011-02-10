@@ -2,7 +2,6 @@
 
 
 import logging
-import MySQLdb
 import time
 import xml.sax
 
@@ -59,11 +58,11 @@ class TemplateHandler(xml.sax.ContentHandler):
         self.text += content
 
 
-def InsertTemplate(connection, name, text, index):
+def InsertTemplate(cursor, name, text, index):
   """Inserts a template into a MediaWiki database.
 
   Args:
-    connection: The MySQL connection to use for running queries.
+    cursor: The MySQL cursor to use for running queries.
     name: The title of the template.
     text: The content of the template.
     index: The ID of the template. Used as page, revision and text ID.
@@ -72,40 +71,39 @@ def InsertTemplate(connection, name, text, index):
   encoded_text = text.encode('utf8')
   is_redirect = ('#redirect' in text) and ('\n' not in text)
   timestamp = time.strftime(TIMESTAMP_FORMAT)
-  
-  connection.execute(PAGE_INSERT_SQL, (index,         # page_id
-                                       10,            # page_namespace
-                                       encoded_name,  # page_title
-                                       '',            # page_restrictions
-                                       1,             # page_counter
-                                       is_redirect,   # page_is_redirect
-                                       1,             # page_is_new
-                                       0.123,         # page_random
-                                       timestamp,     # page_touched
-                                       index,         # page_latest
-                                       len(text)))    # page_len
-  connection.execute(REVISION_INSERT_SQL, (index,     # rev_id
-                                           index,     # rev_page
-                                           index,     # rev_text_id
-                                           '',        # rev_comment
-                                           1,         # rev_user
-                                           'Admin',   # rev_user_text
-                                           timestamp, # rev_timestamp
-                                           0,         # rev_minor_edit
-                                           0,         # rev_deleted
-                                           len(text), # rev_len
-                                           0))        # rev_parent_id
-  connection.execute(TEXT_INSERT_SQL, (index, encoded_text, 'utf-8'))
+
+  cursor.execute(PAGE_INSERT_SQL, (index,         # page_id
+                                   10,            # page_namespace
+                                   encoded_name,  # page_title
+                                   '',            # page_restrictions
+                                   1,             # page_counter
+                                   is_redirect,   # page_is_redirect
+                                   1,             # page_is_new
+                                   0.123,         # page_random
+                                   timestamp,     # page_touched
+                                   index,         # page_latest
+                                   len(text)))    # page_len
+  cursor.execute(REVISION_INSERT_SQL, (index,     # rev_id
+                                       index,     # rev_page
+                                       index,     # rev_text_id
+                                       '',        # rev_comment
+                                       1,         # rev_user
+                                       'Admin',   # rev_user_text
+                                       timestamp, # rev_timestamp
+                                       0,         # rev_minor_edit
+                                       0,         # rev_deleted
+                                       len(text), # rev_len
+                                       0))        # rev_parent_id
+  cursor.execute(TEXT_INSERT_SQL, (index, encoded_text, 'utf-8'))
 
 
-def ImportTemplates(source, db_info):
+def ImportTemplates(source, cursor):
   """Extracts templates from a MediaWiki dump and inserts them into a database.
 
   Args:
     source: The file path of a MediaWiki XML dump from which the templates are
       to be extracted.
-    db_info: The MediaWiki database connection info dictionary, including host,
-      user, passwd and db keys.
+    cursor: The MediaWiki database cursor.
   """
   handler = TemplateHandler()
   with open(source) as src_file:
@@ -114,15 +112,9 @@ def ImportTemplates(source, db_info):
 
   logging.info('Loaded %d templates.', len(templates))
 
-  with MySQLdb.connect(**db_info) as connection:
-    index = INDEX_START
-    for name, text in templates.iteritems():
-      InsertTemplate(connection, name, text, index)
-      index += 1
+  index = INDEX_START
+  for name, text in templates.iteritems():
+    InsertTemplate(cursor, name, text, index)
+    index += 1
 
   logging.info('Imported %d templates.', len(templates))
-
-
-if __name__ == '__main__':
-  ImportTemplates('enwiktionary-latest-pages-articles.xml',
-                  dict(host='localhost', user='root', passwd='', db='wikidb'))
