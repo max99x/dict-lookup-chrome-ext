@@ -11,7 +11,7 @@ var BASE_Z_INDEX = 65000;
 // URL constants.
 var EXTERN_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/%query%';
 var AUDIO_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/File:%file%';
-var GOOGLE_DICT_LINK_TEMPLATE = 'http://www.google.com/dictionary?langpair=en|en&q=%query%&hl=en&aq=f';
+var GOOGLE_DICT_LINK_TEMPLATE = 'http://www.google.com/dictionary?langpair=en|en&amp;q=%query%&amp;hl=en&amp;aq=f';
 var THE_FREE_DICT_LINK_TEMPLATE = 'http://www.tfd.com/p/%query%';
 var SPEAKER_ICON_URL = chrome.extension.getURL('img/speaker.png');
 var HANDLE_ICON_URL = chrome.extension.getURL('img/handle.png');
@@ -71,17 +71,17 @@ function initialize() {
   for (var opt in options) {
     setOpt(opt);
   }
-  
+
   // Manually inject the stylesheet into non-HTML pages that have no <head>.
   if (!document.head) {
     link = document.createElement('link');
     link.rel = 'stylesheet';
     link.type = 'text/css';
     link.href = chrome.extension.getURL('frame.css');
-    
+
     document.body.appendChild(link);
   }
-  
+
   // Override label visibility.
   if (!options.showLabels) {
     label_style = document.createElement('style');
@@ -89,7 +89,7 @@ function initialize() {
     label_style.innerText = '#chrome_ggl_dict_ext .label {display: none !important}';
     (document.head || document.body).appendChild(label_style);
   }
-  
+
   // Set event listeners.
   window.addEventListener('keydown', handleKeypress, false);
   setTimeout(function() {
@@ -113,7 +113,7 @@ function handleClick(e) {
 
   // If click outside the frame/form, remove it.
   if (!is_inside_frame) removePopup(true, true);
-  
+
   // If the modifier is held down and we have a selection, create a pop-up.
   if (checkModifier(options.clickModifier, e)) {
     var query = getTrimmedSelection();
@@ -141,7 +141,7 @@ function handleKeypress(e) {
   if (!options.shortcutEnable) return;
   if (!checkModifier(options.shortcutModifier, e)) return;
   if (options.shortcutKey.charCodeAt(0) != e.keyCode) return;
-  
+
   if (options.shortcutSelection && getTrimmedSelection() != '') {
     // Lookup selection.
     removePopup(true, true);
@@ -180,12 +180,12 @@ function createQueryForm() {
   var windowY = (window.innerHeight - (PADDING_TOP + options.queryFormHeight + PADDING_BOTTOM)) / 2;
   var x = body.scrollLeft + windowX;
   var y = body.scrollTop + windowY;
-  
+
   // Create the form, set its id and insert it.
   var qform = document.createElement('div');
   qform.id = FORM_ID;
   body.appendChild(qform);
-  
+
   // Set form style.
   var zoom_ratio = getZoomRatio();
   qform.style.position = 'absolute';
@@ -193,12 +193,12 @@ function createQueryForm() {
   qform.style.top = (y / zoom_ratio) + 'px';
   qform.style.width = options.queryFormWidth + 'px';
   qform.style.zIndex = BASE_Z_INDEX;
-    
+
   // Add textbox.
   textbox = document.createElement('input');
   textbox.type = 'text';
   qform.appendChild(textbox);
-  
+
   function initLookup() {
     grayOut(false);
     removePopup(false, true);
@@ -207,32 +207,32 @@ function createQueryForm() {
       createCenteredPopup(textbox.value);
     }
   }
-  
+
   textbox.focus();
-  
+
   // Add button.
   button = document.createElement('input');
   button.type = 'button';
   button.value = 'Lookup';
   qform.appendChild(button);
-  
+
   // Set lookup event handlers.
   textbox.addEventListener('keypress', function(e) {
     if (e.keyCode == 13) {  // Pressed Enter.
       setTimeout(initLookup, 400);
     }
   }, false);
-    
+
   button.addEventListener('click', function(e) {
     setTimeout(initLookup, 400);
   }, false);
-  
+
   // Schedule a resize of the textbox to accommodate the button in a single line.
   setTimeout(function() {
     var width = options.queryFormWidth - button.offsetWidth - 2 * PADDING_FORM - 3;
     textbox.style.width = width + 'px';
   }, 100);
-  
+
   // Initiate the fade-in animation in after 100 milliseconds.
   // Setting it now will not trigger the CSS3 animation sequence.
   setTimeout(function() {
@@ -265,10 +265,10 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
   // Unique class to differentiate between frame instances.
   frame.className = ROOT_ID + (new Date()).getTime();
   body.appendChild(frame);
-        
+
   // Make frame draggable by its top.
   makeMoveable(frame, PADDING_TOP);
-  
+
   // Start loading frame data.
   chrome.extension.sendRequest({method: 'lookup', arg: query}, function(response) {
     if (response != null) {
@@ -281,21 +281,21 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
         handle.id = ROOT_ID + '_handle';
         frame.appendChild(handle);
         handle.style.background = 'url("' + HANDLE_ICON_URL + '") !important';
-        
+
         makeResizeable(frame, handle);
-        
+
         // Create back link.
         if (breadcrumbs.length) {
           var back = document.createElement('div');
           back.id = ROOT_ID + '_back';
           frame.appendChild(back);
           back.style.background = 'url("' + BACK_ICON_URL + '") !important';
-          
+
           back.addEventListener('click', function() {
             navigateFrame(breadcrumbs.pop());
           });
         }
-        
+
         // Resize shaders to avoid shading scroll bar arrows.
         var shader_top = document.getElementById(ROOT_ID + '_shader_top');
         var shader_bottom = document.getElementById(ROOT_ID + '_shader_bottom');
@@ -303,7 +303,7 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
           shader_top.style.width = (shader_top.offsetWidth - 16) + 'px';
           shader_bottom.style.width = (shader_bottom.offsetWidth - 16) + 'px';
         }
-        
+
         // Hook into dictionary links.
         var links = frame.getElementsByTagName('a');
         for (var i in links) {
@@ -318,7 +318,7 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
             });
           }
         }
-        
+
         // Hook into audio icons.
         var spans = frame.getElementsByTagName('span');
         for (var i in spans) {
@@ -330,7 +330,7 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
       }, 100);
     }
   });
-  
+
   // Calculate frame position.
   var window_width = window.innerWidth;
   var window_height = window.innerHeight;
@@ -339,21 +339,21 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
   var top = 0;
   var left = 0;
   var zoom_ratio = getZoomRatio();
-  
+
   if (windowX + full_frame_width * zoom_ratio >= window_width) {
     left = x / zoom_ratio - full_frame_width;
     if (left < 0) left = 5;
   } else {
     left = x / zoom_ratio;
   }
-  
+
   if (windowY + full_frame_height * zoom_ratio >= window_height) {
     top = y / zoom_ratio - full_frame_height;
     if (top < 0) top = 5;
   } else {
     top = y / zoom_ratio;
   }
-  
+
   // Set frame style.
   frame.style.position = fixed ? 'fixed' : 'absolute';
   frame.style.left = left + 'px';
@@ -362,13 +362,13 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
   frame.style.height = options.frameHeight + 'px';
   frame.style.zIndex = BASE_Z_INDEX;
   frame.style.background = 'white url("' + LOADER_ICON_URL + '") center no-repeat !important';
-  
+
   // Initiate the fade-in animation in after 100 milliseconds.
   // Setting it now will not trigger the CSS3 animation sequence.
   setTimeout(function() {
     frame.style.opacity = 1;
   }, 100);
-  
+
   last_query = query;
 }
 
@@ -397,17 +397,17 @@ function registerAudioIcon(icon, filename) {
 // Fade out then destroy the frame and/or form.
 function removePopup(do_frame, do_form) {
   var form = document.getElementById(FORM_ID);
-  
+
   if (form && do_form) {
     grayOut(false);
     form.style.opacity = 0;
     setTimeout(function() {if (form) body.removeChild(form);}, 400);
   }
-  
+
   // Remember the current frame's unique class name.
   var frame_ref = document.getElementById(ROOT_ID);
   var frame_class = frame_ref ? frame_ref.className : null;
-  
+
   if (frame_ref && do_frame) {
     frame_ref.style.opacity = 0;
     setTimeout(function() {
@@ -424,15 +424,15 @@ function createHtmlFromLookup(query, dict_entry) {
   function maybeStripLinks(text) {
     return options.showLinks ? text : text.replace(/<a[^>]*>([^<>]*)<\/a>/g, '$1');
   }
-  
+
   var buffer = [];
-  
+
   buffer.push('<div id="' + ROOT_ID + '_content">');
-  
+
   if (!dict_entry.meanings || dict_entry.meanings.length == 0) {
     buffer.push('<div style="display: table; padding-top: 3em; width: 100%;">');
     buffer.push('<div style="display: table-cell; text-align: center; vertical-align: middle;">');
-    
+
     buffer.push('No definitions for <strong>' + query + '</strong>.');
     if (dict_entry.suggestions) {
       // Offer suggestions.
@@ -452,20 +452,23 @@ function createHtmlFromLookup(query, dict_entry) {
       }
       buffer.push('</em>');
     }
+
     // Suggest other sources.
     buffer.push('<br /><br />');
     buffer.push('Try the same query in ');
     buffer.push('<a class="alternate_source" href="' + GOOGLE_DICT_LINK_TEMPLATE.replace('%query%', query) + '" target="_blank">');
     buffer.push('Google Dictionary ');
-    buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Lookup in Google Dictionary">');
+    buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Lookup in Google Dictionary" />');
     buffer.push('</a>');
+
     buffer.push(' or ');
     buffer.push('<a class="alternate_source" href="' + THE_FREE_DICT_LINK_TEMPLATE.replace('%query%', query) + '" target="_blank">');
     buffer.push('The Free Dictionary ');
-    buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Lookup in The Free Dictionary">');
+    buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Lookup in The Free Dictionary" />');
     buffer.push('</a>');
+
     buffer.push('.');
-    
+
     buffer.push('</div>');
     buffer.push('</div>');
   } else {
@@ -473,30 +476,30 @@ function createHtmlFromLookup(query, dict_entry) {
     buffer.push('<div class="' + ROOT_ID + '_header">');
     var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', (dict_entry.term || query));
     buffer.push('<a class="' + ROOT_ID + '_title" href="' + extern_link + '" target="_blank">' + (dict_entry.term || query) + '</a>');
-    
+
     if (options.showIPA && dict_entry.ipa && dict_entry.ipa.length) {
       for (var i in dict_entry.ipa) {
         buffer.push('<span class="' + ROOT_ID + '_phonetic" title="Phonetic">' + dict_entry.ipa[i] + '</span>');
       }
     }
-    
+
     if (options.showAudio && dict_entry.audio && dict_entry.audio.length) {
       for (var i in dict_entry.audio) {
         var audio = dict_entry.audio[i];
         buffer.push('<span class="' + ROOT_ID + '_audio" data-src="' + audio.file + '">');
-        buffer.push('<img class="' + ROOT_ID + '_speaker" src="' + SPEAKER_ICON_URL + '" title="Listen">');
+        buffer.push('<img class="' + ROOT_ID + '_speaker" src="' + SPEAKER_ICON_URL + '" title="Listen" />');
         buffer.push(' (' + audio.type + ')');
         if (options.showAudioLinks) {
           buffer.push('<a href="' + AUDIO_LINK_TEMPLATE.replace('%file%', audio.file) + '" target="_blank">');
-          buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Wikimedia Commons File Description">');
+          buffer.push('<img src="' + EXTERNAL_ICON_URL + '" title="Wikimedia Commons File Description" />');
           buffer.push('</a>');
         }
         buffer.push('</span>');
       }
     }
-    
+
     buffer.push('</div>');
-    
+
     // Meanings.
     buffer.push('<ol id="' + ROOT_ID + '_meanings">');
     for (var i in dict_entry.meanings) {
@@ -519,7 +522,7 @@ function createHtmlFromLookup(query, dict_entry) {
       buffer.push('</li>');
     }
     buffer.push('</ol>');
-    
+
     // Etymology
     if (options.showEtymology && dict_entry.etymology) {
       buffer.push('<hr class="' + ROOT_ID + '_separator" />');
@@ -527,12 +530,12 @@ function createHtmlFromLookup(query, dict_entry) {
       dict_entry.etymology = maybeStripLinks(dict_entry.etymology);
       buffer.push('<p>' + dict_entry.etymology + '</p>');
     }
-    
+
     // Synonyms
     if (options.showSynonyms && dict_entry.synonyms && dict_entry.synonyms.length) {
       buffer.push('<hr class="' + ROOT_ID + '_separator" />');
       buffer.push('<div class="' + ROOT_ID + '_subtitle">Synonyms</div>');
-      
+
       buffer.push('<p id="' + ROOT_ID + '_synonyms">');
       for (var i in dict_entry.synonyms) {
         var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', dict_entry.synonyms[i]);
@@ -543,12 +546,12 @@ function createHtmlFromLookup(query, dict_entry) {
       }
       buffer.push('</p>');
     }
-    
+
     // Antonyms
     if (options.showAntonyms && dict_entry.antonyms && dict_entry.antonyms.length) {
       buffer.push('<hr class="' + ROOT_ID + '_separator" />');
       buffer.push('<div class="' + ROOT_ID + '_subtitle">Antonyms</div>');
-      
+
       buffer.push('<p id="' + ROOT_ID + '_antonyms">');
       for (var i in dict_entry.antonyms) {
         var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', dict_entry.antonyms[i]);
@@ -559,12 +562,12 @@ function createHtmlFromLookup(query, dict_entry) {
       }
       buffer.push('</p>');
     }
-    
+
     // Related
     if (options.showRelated && dict_entry.related && dict_entry.related.length) {
       buffer.push('<hr class="' + ROOT_ID + '_separator" />');
       buffer.push('<div class="' + ROOT_ID + '_subtitle">See also</div>');
-      
+
       buffer.push('<p id="' + ROOT_ID + '_related">');
       for (var i in dict_entry.related) {
         var extern_link = EXTERN_LINK_TEMPLATE.replace('%query%', dict_entry.related[i]);
@@ -576,13 +579,14 @@ function createHtmlFromLookup(query, dict_entry) {
       buffer.push('</p>');
     }
   }
-  
+
   buffer.push('<div id="' + ROOT_ID + '_spacer"></div>');
   buffer.push('</div>');
 
   buffer.push('<span id="' + ROOT_ID + '_shader_top" style="background: url(\'' + GRADIENT_DOWN_URL + '\') repeat-x !important"></span>');
   buffer.push('<span id="' + ROOT_ID + '_shader_bottom" style="background: url(\'' + GRADIENT_UP_URL + '\') repeat-x !important"></span>');
-  
+
+  console.log(buffer.join(''));
   return buffer.join('');
 }
 
@@ -596,21 +600,21 @@ function grayOut(vis) {
   var dark_id = ROOT_ID + '_shader';
   var dark = document.getElementById(dark_id);
   var first_time = (dark == null);
-  
+
   if (first_time) {
     // First time - create shading layer.
     var tnode = document.createElement('div');
     tnode.id = dark_id;
-    
+
     tnode.style.position = 'absolute';
     tnode.style.top = '0px';
     tnode.style.left = '0px';
     tnode.style.overflow = 'hidden';
-    
+
     document.body.appendChild(tnode);
     dark = document.getElementById(dark_id);
   }
-  
+
   if (vis) {
     // Set the shader to cover the entire page and make it visible.
     dark.style.zIndex = BASE_Z_INDEX - 1;
@@ -618,7 +622,7 @@ function grayOut(vis) {
     dark.style.width = body.scrollWidth + 'px';
     dark.style.height = body.scrollHeight + 'px';
     dark.style.display = 'block';
-    
+
     setTimeout(function() {dark.style.opacity = 0.7;}, 100);
   } else if (dark.style.opacity != 0) {
     setTimeout(function() {dark.style.opacity = 0;}, 100);
@@ -694,13 +698,13 @@ function makeResizeable(container, handle) {
       shader_bottom = document.getElementById(ROOT_ID + '_shader_bottom');
       shader_top.style.width = (shader_top.offsetWidth + moved.x / zoom_ratio) + 'px';
       shader_bottom.style.width = (shader_bottom.offsetWidth + moved.x / zoom_ratio) + 'px';
-      
+
       if (options.saveFrameSize) {
         options.frameWidth = new_width;
         chrome.extension.sendRequest({method: 'store', arg: 'frameWidth', arg2: new_width}, function(response) {});
       }
     }
-    
+
     e.preventDefault();
   }
 
@@ -729,7 +733,7 @@ function makeMoveable(box, margin) {
     last_position = {x: e.clientX, y: e.clientY};
     box.style.top = (box.offsetTop + moved.y) + 'px';
     box.style.left = (box.offsetLeft + moved.x) + 'px';
-    
+
     e.preventDefault();
   }
 
@@ -761,11 +765,11 @@ function isClickInsideFrame(e) {
       x = e.clientX;
       y = e.clientY;
     }
-    
+
     var zoom_ratio = getZoomRatio();
     x /= zoom_ratio;
     y /= zoom_ratio;
-    
+
     if (x >= frame_ref.offsetLeft &&
         x <= frame_ref.offsetLeft + frame_ref.offsetWidth &&
         y >= frame_ref.offsetTop &&
@@ -773,7 +777,7 @@ function isClickInsideFrame(e) {
       return true;
     }
   }
-  
+
   return false;
 }
 
