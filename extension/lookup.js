@@ -586,7 +586,6 @@ function createHtmlFromLookup(query, dict_entry) {
   buffer.push('<span id="' + ROOT_ID + '_shader_top" style="background: url(\'' + GRADIENT_DOWN_URL + '\') repeat-x !important"></span>');
   buffer.push('<span id="' + ROOT_ID + '_shader_bottom" style="background: url(\'' + GRADIENT_UP_URL + '\') repeat-x !important"></span>');
 
-  console.log(buffer.join(''));
   return buffer.join('');
 }
 
