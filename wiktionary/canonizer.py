@@ -26,7 +26,7 @@ RE_ALTERNATE_FORM = re.compile(r'''
   |
    past \s+ participle)
 \s+ of \s+
-<a \s+ href="http://en\.wiktionary\.org/wiki/([^>"]+)">
+<a \s+ href="http://en\.wiktionary\.org/wiki/([^>"]+?)(?:%23[^"]*)?">
   [^<>]*
 </a>
 \s*
@@ -46,7 +46,7 @@ def Canonize(cursor):
 
   cursor.execute('SELECT * FROM lookup')
   for row in cursor:
-    word = row[0].decode('utf8')
+    word = row[0]
     text = json.loads(row[1])
     if 'meanings' not in text: continue
     meanings = [i['content'] for i in text['meanings']]
@@ -62,7 +62,7 @@ def Canonize(cursor):
         targets.add(target.group(1))
 
     if len(targets) == 1:
-      redirects[targets.pop()].append(word)
+      redirects[targets.pop().encode('utf8')].append(word)
 
   # Apply redirects.
   for target, sources in redirects.iteritems():
