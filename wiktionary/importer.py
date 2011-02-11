@@ -1,46 +1,50 @@
-import MySQLdb
+"""Imports pages from a MediaWiki dump into the lookup database."""
+
+
 import json
 from xml.parsers import expat
-from wiktionaryparser import *
+import wiktionaryparser
 
-class ExpatReader(object):
-    def __init__(self):
-        self._handler = lambda x, y: None
-        self._buffer = []
-        self._title = None
 
-    def _startElement(self, name, attrs):
-        if name == 'page': self._title = attrs['title']
-        self._buffer = []
+# The query used to insert new lookup values.
+INSERTION_QUERY = 'REPLACE INTO lookup VALUES(%s, %s, NULL)'
 
-    def _charData(self, data):
-        self._buffer.append(data)
 
-    def _endElement(self, name):
-        if name == 'page': self._handler(self._title, ''.join(self._buffer))
+class Importer(object):
+  """Reads an XML dump and converts its pages into lookup DB records."""
 
-    def run(self, src_filename, page_handler):
-        self._handler = page_handler
-        
-        parser = expat.ParserCreate()
-        parser.StartElementHandler = self._startElement
-        parser.EndElementHandler = self._endElement
-        parser.CharacterDataHandler = self._charData
+  def __init__(self):
+    self._cursor = None
+    self._buffer = []
+    self._title = None
 
-        f = open(src_filename)
-        try:
-            parser.ParseFile(f)
-        finally:
-            f.close()
+  def _startElement(self, name, attrs):
+    """Records page title."""
+    if name == 'page':
+      self._title = attrs['title']
+    self._buffer = []
 
-def importPage(title, page, cursor):
-    meanings = parseMeanings(page)
-    related = parseRelated(page)
-    synonyms = parseSynonyms(page)
-    antonyms = parseAntonyms(page)
-    ipa = parseIPA(page)
-    audio = parseAudio(page)
-    etymology = parseEtymology(page)
+  def _charData(self, data):
+    self._buffer.append(data)
+
+  def _endElement(self, name):
+    if name == 'page':
+      self.importPage(self._title, ''.join(self._buffer))
+
+  def importPage(self, title, page):
+    """Converts a page into a JSON object and inserts it into the DB.
+
+    Args:
+      title: The name of the page.
+      page: The textual content of the page.
+    """
+    meanings = wiktionaryparser.parseMeanings(page)
+    related = wiktionaryparser.parseRelated(page)
+    synonyms = wiktionaryparser.parseSynonyms(page)
+    antonyms = wiktionaryparser.parseAntonyms(page)
+    ipa = wiktionaryparser.parseIPA(page)
+    audio = wiktionaryparser.parseAudio(page)
+    etymology = wiktionaryparser.parseEtymology(page)
 
     structured_page = {'term': title}
     if meanings: structured_page['meanings'] = meanings
@@ -51,12 +55,32 @@ def importPage(title, page, cursor):
     if audio: structured_page['audio'] = audio
     if etymology: structured_page['etymology'] = etymology[0]
 
+    title = title.encode('utf8')
     json_text = json.dumps(structured_page, separators=(',', ':'))
-    
-    cursor.execute('REPLACE INTO lookup VALUES(%s, %s, NULL)', [title, json_text])
 
-if __name__ == '__main__':
-    with MySQLdb.connect(host='localhost', user='root', passwd='',
-                         db='dictionary', charset='utf8') as cursor:
-        ExpatReader().run('articles_out4.xml', lambda x, y: importPage(x, y, cursor))
-        cursor.execute('UPDATE lookup SET sdx = SOUNDEX(name)')
+    try:
+      self._cursor.execute(INSERTION_QUERY, (title, json_text))
+    except:
+      print repr(title)
+      print repr(json_text)
+      raise
+
+  def run(self, src_filename, db_cursor):
+    """Imports the specified XML dump to the lookup DB.
+    
+    Args:
+      src_filename: The filename of the XML dump to import. Must be in the
+        format created by a WiktionaryFilter.
+      db_cursor: The database cursor to use for inserting new lookup records.
+    """
+    self._cursor = db_cursor
+    parser = expat.ParserCreate()
+    parser.StartElementHandler = self._startElement
+    parser.EndElementHandler = self._endElement
+    parser.CharacterDataHandler = self._charData
+
+    f = open(src_filename)
+    try:
+      parser.ParseFile(f)
+    finally:
+      f.close()

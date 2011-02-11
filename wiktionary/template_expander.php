@@ -8,7 +8,7 @@ templates to expand already imported (e.g. with importtemplates.py).
 
 Due to inefficiency in recursive template evaluation which needs many DB queries
 per page, the script is extremely slow. The last time this was run, it took
-about 48 hours to expand the English parts of the Wiktionary dump on a mid-range
+about 24 hours to expand the English parts of the Wiktionary dump on a mid-range
 PC. Make sure your server is configured not to time out.
 
 */
