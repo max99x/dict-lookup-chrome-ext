@@ -513,7 +513,7 @@ function createHtmlFromLookup(query, dict_entry) {
           meaning.examples[j] = maybeStripLinks(meaning.examples[j]);
           buffer.push('<li>' + meaning.examples[j] + '</li>');
         }
-        buffer.push('</ul');
+        buffer.push('</ul>');
       }
 
       buffer.push('</li>');
