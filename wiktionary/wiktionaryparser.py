@@ -395,8 +395,11 @@ def _extractQualifiers(text):
 
   # Reformat the qualifiers.
   if qualifiers:
-    qualifiers = [RE_TAG.sub('', i) for i in qualifiers]
-    qualifiers = '<span class="label">' + ', '.join(qualifiers) + '</span> '
+    joined_qualifiers = ', '.join(qualifiers)
+    joined_qualifiers = RE_INNER_LINK.sub(_formatLink, joined_qualifiers)
+    joined_qualifiers = RE_EXTERN_LINK.sub('', joined_qualifiers)
+    joined_qualifiers = RE_TAG.sub('', joined_qualifiers)
+    qualifiers = '<span class="label">%s</span> ' % joined_qualifiers
   else:
     qualifiers = ''
 
@@ -431,15 +434,15 @@ def _evalWikiMarkup(text):
   text = parsed_html.renderContents().decode('utf8')
   text = RE_INTERPROJECT_LINK.sub('', text)
 
-  # Evaluate links.
-  text = RE_INNER_LINK.sub(_formatLink, text)
-  text = RE_EXTERN_LINK.sub('', text)
-
   # Extract topic qualifiers.
   qualifiers, text = _extractQualifiers(text)
 
   # Put qualifiers back and get rid of all unrecognized tags.
   text = qualifiers + RE_TAG.sub('', text)
+
+  # Evaluate links.
+  text = RE_INNER_LINK.sub(_formatLink, text)
+  text = RE_EXTERN_LINK.sub('', text)
 
   # Remove duplicate quotes.
   text = text.replace(u'\u201c\u2018', u'\u201c')
