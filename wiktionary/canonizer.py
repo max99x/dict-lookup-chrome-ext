@@ -10,28 +10,37 @@ import re
 import collections
 
 
-#TODO: Try enjoyed, abdicating.
 # A regex to find the canonical term in a definition of a related term.
-RE_ALTERNATE_FORM = re.compile(r'''
-.{,80}
-\s
+RE_ALTERNATE_FORM = re.compile(ur'''
+^
 (?:
-   form
+    [^<>]{,30}
   |
-   plural
-  |
-   present \s+ participle
-  |
-   simple \s+ past
-  |
-   past \s+ participle)
-\s+ of \s+
+    (?:
+      .{,80}
+      \s
+    )?
+    (?:
+        form
+      |
+        plural
+      |
+        present \s+ participle
+      |
+        simple \s+ past
+      |
+        past \s+ participle
+    )
+    \s+ of \s+
+)
 <a \s+ href="http://en\.wiktionary\.org/wiki/([^>"]+?)(?:%23[^"]*)?">
   [^<>]*
 </a>
 \s*
 (?:\.\s*)?
-''', re.VERBOSE | re.DOTALL | re.IGNORECASE)
+.{,30}
+$
+''', re.UNICODE | re.VERBOSE | re.DOTALL | re.IGNORECASE)
 # The SQL query used to apply a redirect from one term to another.
 REDIRECT_QUERY = '''
   UPDATE lookup AS dst, lookup AS src
