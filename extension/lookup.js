@@ -7,7 +7,6 @@ var PADDING_TOP = 15;
 var PADDING_BOTTOM = 15;
 var PADDING_FORM = 10;
 var BASE_Z_INDEX = 65000;
-
 // URL constants.
 var EXTERN_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/%query%';
 var AUDIO_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/File:%file%';
@@ -73,7 +72,7 @@ function initialize() {
   }
 
   // Manually inject the stylesheet into non-HTML pages that have no <head>.
-  if (!document.head) {
+  if (!document.head && document.body) {
     link = document.createElement('link');
     link.rel = 'stylesheet';
     link.type = 'text/css';
