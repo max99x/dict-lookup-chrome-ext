@@ -1,6 +1,6 @@
 {
   "name": "Dictionary Lookup",
-  "version": "4.2.1",
+  "version": "4.3",
   "description": "Look up any word in an inline frame with a simple click and without leaving the page.",
   "icons": { "128": "img/icon.png" },
   "options_page": "options.htm",
@@ -14,7 +14,7 @@
   }],
   "permissions": [
     "tabs",
-    "http://lookup.max99x.com/",
+    "http://dictionary-lookup.org/",
     "http://commons.wikimedia.org/"
   ]
 }
