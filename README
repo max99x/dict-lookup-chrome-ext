@@ -35,8 +35,9 @@ to running the whole thing:
 
 1. Run `wiktionary_setup/build-mediawiki.sh` to create a MediaWiki installation
    with the ExpandTemplates and ParserFunctions extensions and the additions
-   needed by the Wiktionary parser. You may need to edit the database settings
-   in `wiktionary_setup/build-mediawiki.sh` before running the script. Note that
+   needed by the Wiktionary parser. This is a dummy server that is only used to
+   expand Wiktionary templates. You may need to edit the database settings in
+   `wiktionary_setup/build-mediawiki.sh` before running the script. Note that
    this script requires the following commands to be available:
    * `wget`: for getting the MediaWiki source tarball. 
    * `tar`: for unpacking the source tarball.
