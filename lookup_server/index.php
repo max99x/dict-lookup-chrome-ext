@@ -1,5 +1,10 @@
 <?php
 
+$MYSQL_HOST = 'localhost';
+$MYSQL_USER = 'root';
+$MYSQL_PWD = '';
+$MYSQL_DB = 'dictionary';
+
 header('Content-Type: text/json');
 
 function get_suggestions($word) {
@@ -32,8 +37,8 @@ function get_suggestions($word) {
 $word = @$_GET['word'];
 if (!$word) die('{}');
 
-mysql_pconnect('localhost', 'root', '') or die('{}');
-mysql_select_db('dictionary') or die('{}');
+mysql_pconnect($MYSQL_HOST, $MYSQL_USER, $MYSQL_PWD) or die('{}');
+mysql_select_db($MYSQL_DB) or die('{}');
 
 $word = mysql_real_escape_string($word);
 $res = mysql_query("SELECT text FROM lookup WHERE name = '$word';");
