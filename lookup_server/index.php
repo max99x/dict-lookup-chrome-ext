@@ -8,7 +8,7 @@ function get_suggestions($word) {
                       WHERE    sdx = SOUNDEX('$word')
                       ORDER BY ABS(LENGTH(name) - LENGTH('$word'))
                       LIMIT    300;");
-    
+
   $candidates = array();
   $min = 999;
   for ($i = 0; $i < mysql_num_rows($res); $i++) {
@@ -18,13 +18,14 @@ function get_suggestions($word) {
     $candidates[$row[0]] = $distance;
   }
   if ($min > 3) return '{}';
+
   $suggestions = array();
   foreach ($candidates as $word => $distance) {
     if ($min != $distance) continue;
     $suggestions[] = $word;
     if (count($suggestions) == 5) break;
   }
-  
+
   return json_encode(array('suggestions' => $suggestions));
 }
 
@@ -40,12 +41,13 @@ $res = mysql_query("SELECT text FROM lookup WHERE name = '$word';");
 if (!$res || mysql_num_rows($res) != 1) {
   $word_lower = strtolower($word);
   $word_upper = strtoupper($word);
-  $res = mysql_query("SELECT text FROM lookup WHERE name = '$word_lower' OR name = '$word_upper';");
-  if (!$res || mysql_num_rows($res) != 1) {
-    die(get_suggestions($word));
-  }
+  $res = mysql_query("SELECT text
+                      FROM lookup
+                      WHERE name = '$word_lower' OR name = '$word_upper';");
+  if (!$res || mysql_num_rows($res) != 1) die(get_suggestions($word));
 }
 
 $row = mysql_fetch_row($res);
 echo $row[0];
+
 ?>
