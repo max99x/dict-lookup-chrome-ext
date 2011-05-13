@@ -1,29 +1,20 @@
 """Converts a Wiktionary dump to a lookup database.
 
-Requires an MediaWiki server with an empty database and template_expander.php to
+Requires a MediaWiki server with an empty database and template_expander.php to
 be accessible via HTTP. Also requires the MediaWiki and the lookup databases to
-be accessible via a MySQL server.
+be accessible via a MySQL server. See README for help setting them up.
 """
 
-
-import logging
-import MySQLdb
-import os
-import urllib2
-import canonizer
-import filters.english_def
-import filters.english_entry
-import filters.strip_translations
-import importer
-import importtemplates
-
+#------------------------------------------------------------------------------#
+#                                  SETTINGS                                    #
+#------------------------------------------------------------------------------#
 
 # Connection and login settings for the databases.
 WIKI_DB = {
   'host': 'localhost',
   'user': 'root',
   'passwd': '',
-  'db': 'wikidb'
+  'db': 'dictionary_lookup_mediawiki'
 }
 LOOKUP_DB = {
   'host': 'localhost',
@@ -43,6 +34,20 @@ TEMP4 = 'articles_04.xml'
 # The URL of the template expander script in a MediaWiki installation.
 TEMPLATE_EXPANDER_URL = ('http://127.0.0.1/mediawiki/template_expander.php?'
                          'src_dump=%s&dst_dump=%s')
+
+#------------------------------------------------------------------------------#
+
+
+import logging
+import MySQLdb
+import os
+import urllib2
+import canonizer
+import filters.english_def
+import filters.english_entry
+import filters.strip_translations
+import importer
+import importtemplates
 
 
 def main():

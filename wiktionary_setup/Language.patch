@@ -1,0 +1,4 @@
+1758c1758
+< 	function getMagic( &$mw ) {
+---
+> 	function getMagic( $mw ) {

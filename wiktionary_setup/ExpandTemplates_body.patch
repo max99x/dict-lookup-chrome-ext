@@ -1,0 +1,25 @@
+45a46,47
+> 			
+> 			$wgOut->addHTML( $this->makeOutput( $output ) );
+49d50
+< 		}
+51,52c52,53
+< 		$wgOut->addWikiText( wfMsg( 'expand_templates_intro' ) );
+< 		$wgOut->addHTML( $this->makeForm( $titleStr, $input ) );
+---
+> 			$wgOut->addWikiText( wfMsg( 'expand_templates_intro' ) );
+> 			$wgOut->addHTML( $this->makeForm( $titleStr, $input ) );
+54,56c55,60
+< 		if( $output !== false ) {
+< 			if ( $this->generateXML ) {
+< 				$wgOut->addHTML( $this->makeOutput( $xml, 'expand_templates_xml_output' ) );
+---
+> 			if( $output !== false ) {
+> 				if ( $this->generateXML ) {
+> 					$wgOut->addHTML( $this->makeOutput( $xml, 'expand_templates_xml_output' ) );
+> 				}
+> 				$wgOut->addHTML( $this->makeOutput( $output ) );
+> 				$this->showHtmlPreview( $title, $output, $wgOut );
+58,59d61
+< 			$wgOut->addHTML( $this->makeOutput( $output ) );
+< 			$this->showHtmlPreview( $title, $output, $wgOut );
