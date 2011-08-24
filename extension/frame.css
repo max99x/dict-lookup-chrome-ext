@@ -272,6 +272,17 @@
   height: 10px;
 }
 
+#chrome_ggl_dict_ext_dragger {
+  background: -webkit-gradient(linear, center top, center bottom, from(#ddd), to(#f8f8f8)) !important;
+  width: 100% !important;
+  position: absolute !important;
+  top: 0px !important;
+  left: 0px !important;
+  cursor: move !important;
+  border-radius: 20px 20px 0 0 !important; /* Sync with #chrome_ggl_dict_ext.border-radius */
+  z-index: 65006 !important;  /* Sync with BASE_Z_INDEX+6 in lookup.js. */
+}
+
 #chrome_ggl_dict_ext .label {
   color: #666666 !important;
   font-size: 0.85em;

@@ -271,7 +271,11 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
   // Start loading frame data.
   chrome.extension.sendRequest({method: 'lookup', arg: query}, function(response) {
     if (response != null) {
-      frame.innerHTML = createHtmlFromLookup(query, response);
+      var wrapper = document.createElement('div');
+      wrapper.innerHTML = createHtmlFromLookup(query, response);
+      for (var i = 0; i < wrapper.childNodes.length; i++) {
+        frame.appendChild(wrapper.childNodes[i]);
+      }
 
       // Add some dynamic element after the HTML is loaded.
       setTimeout(function() {
@@ -725,6 +729,11 @@ function makeResizeable(container, handle) {
 function makeMoveable(box, margin) {
   var last_position = {x: 0, y: 0};
 
+  var dragger = document.createElement('div');
+  dragger.id = ROOT_ID + '_dragger';
+  dragger.style.height = margin + 'px !important';
+  box.appendChild(dragger);
+
   function moveListener(e) {
     var moved = {x: (e.clientX - last_position.x),
                  y: (e.clientY - last_position.y)};
@@ -735,20 +744,14 @@ function makeMoveable(box, margin) {
     e.preventDefault();
   }
 
-  box.addEventListener('mousedown', function(e) {
-    var y = box.offsetTop;
-    if (box.style.position == 'fixed') y += document.body.scrollTop;
-    var zoom_ratio = getZoomRatio();
-    var mouse_y = e.pageY / zoom_ratio;
-    if (mouse_y >= y && mouse_y <= y + margin * zoom_ratio) {
-      last_position = {x: e.clientX, y: e.clientY};
-      window.addEventListener('mousemove', moveListener);
-      window.addEventListener('mouseup', function(e) {
-        window.removeEventListener('mousemove', moveListener);
-        e.preventDefault();
-      });
+  dragger.addEventListener('mousedown', function(e) {
+    last_position = {x: e.clientX, y: e.clientY};
+    window.addEventListener('mousemove', moveListener);
+    window.addEventListener('mouseup', function(e) {
+      window.removeEventListener('mousemove', moveListener);
       e.preventDefault();
-    }
+    });
+    e.preventDefault();
   });
 }
 
