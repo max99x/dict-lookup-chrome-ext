@@ -3,7 +3,7 @@
   font-style: normal;
   font-weight: normal;
   font-variant: normal;
-  
+
   text-align: left;
   text-indent: none;
   text-transform: none;
@@ -12,15 +12,15 @@
   word-spacing: none;
   letter-spacing: none;
   line-height: 1.2em;
-  
+
   background-color: white !important;
   color: black !important;
-  
+
   margin: 0px;
   padding: 0px;
   border: 0px;
   outline: none;
-  
+
   position: relative;
   display: block;
   overflow: show;
@@ -29,27 +29,32 @@
   opacity: 1;
   visibility: visible;
   list-style: none;
-  
+
   -webkit-box-shadow: none;
+}
+
+#chrome_ggl_dict_ext img {
+  height: auto;
+  width: auto;
 }
 
 #chrome_ggl_dict_ext {
   background: white !important;
-  
+
   margin: 0px;
   padding-left: 10px;
   padding-top: 15px;
   padding-bottom: 15px;
   padding-right: 0px;
-  
+
   font-family: Arial, Tahoma, sans-serif;
   font-size: 14px;
-  
+
   border: 2px #AAAAAA solid;
   border-radius: 20px;
-  
+
   opacity: 0;
-  
+
   -webkit-box-shadow: rgba(0, 0, 0, 0.6) 0px 0px 18px;
   -webkit-transition: opacity 0.35s linear;
 }
@@ -97,11 +102,11 @@
 #chrome_ggl_dict_ext ol>li {
   list-style: decimal;
 }
-      
+
 #chrome_ggl_dict_ext strong {
   font-weight: bold;
 }
-      
+
 #chrome_ggl_dict_ext em {
   font-style: italic;
 }
@@ -132,16 +137,16 @@
 
 #chrome_ggl_dict_ext_form {
   background: white !important;
-  
+
   padding: 10px;
-  
+
   border-radius: 14px;
-  
+
   font-family: Arial, Tahoma, sans-serif;
   font-size: 14px;
-  
+
   opacity: 0;
-  
+
   -webkit-box-shadow: rgba(0, 0, 0, 0.6) 0px 0px 18px;
   -webkit-transition: opacity 0.35s linear;
 }
@@ -249,14 +254,14 @@
   background-image: -webkit-gradient(linear, left top, left bottom, from(gray), to(#BBBBBB)) !important;
   padding: 3px 2px 2px 3px;
 }
-    
+
 #chrome_ggl_dict_ext_shader_top, #chrome_ggl_dict_ext_shader_bottom {
   position: absolute;
   width: 100%;
   left: 0px;
   z-index: 65002;  /* Sync with BASE_Z_INDEX+2 in lookup.js. */
 }
-    
+
 #chrome_ggl_dict_ext_shader_top {
   top: 15px;  /* Same as #chrome_ggl_dict_ext.padding-top. */
   height: 8px;
