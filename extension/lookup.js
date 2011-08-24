@@ -10,7 +10,7 @@ var BASE_Z_INDEX = 65000;
 // URL constants.
 var EXTERN_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/%query%';
 var AUDIO_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/File:%file%';
-var GOOGLE_DICT_LINK_TEMPLATE = 'http://www.google.com/dictionary?langpair=en|en&amp;q=%query%&amp;hl=en&amp;aq=f';
+var GOOGLE_DICT_LINK_TEMPLATE = 'http://www.google.com/search?q=%query%&tbs=dfn:1';
 var THE_FREE_DICT_LINK_TEMPLATE = 'http://www.tfd.com/p/%query%';
 var SPEAKER_ICON_URL = chrome.extension.getURL('img/speaker.png');
 var HANDLE_ICON_URL = chrome.extension.getURL('img/handle.png');
