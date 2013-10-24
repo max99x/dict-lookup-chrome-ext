@@ -12,13 +12,13 @@ var EXTERN_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/%query%';
 var AUDIO_LINK_TEMPLATE = 'http://en.wiktionary.org/wiki/File:%file%';
 var GOOGLE_DICT_LINK_TEMPLATE = 'http://www.google.com/search?q=%query%&tbs=dfn:1';
 var THE_FREE_DICT_LINK_TEMPLATE = 'http://www.tfd.com/p/%query%';
-var SPEAKER_ICON_URL = chrome.extension.getURL('img/speaker.png');
-var HANDLE_ICON_URL = chrome.extension.getURL('img/handle.png');
-var BACK_ICON_URL = chrome.extension.getURL('img/back.png');
-var LOADER_ICON_URL = chrome.extension.getURL('img/loader.gif');
-var EXTERNAL_ICON_URL = chrome.extension.getURL('img/external.png');
-var GRADIENT_DOWN_URL = chrome.extension.getURL('img/gradient_down.png');
-var GRADIENT_UP_URL = chrome.extension.getURL('img/gradient_up.png');
+var SPEAKER_ICON_URL = chrome.runtime.getURL('img/speaker.png');
+var HANDLE_ICON_URL = chrome.runtime.getURL('img/handle.png');
+var BACK_ICON_URL = chrome.runtime.getURL('img/back.png');
+var LOADER_ICON_URL = chrome.runtime.getURL('img/loader.gif');
+var EXTERNAL_ICON_URL = chrome.runtime.getURL('img/external.png');
+var GRADIENT_DOWN_URL = chrome.runtime.getURL('img/gradient_down.png');
+var GRADIENT_UP_URL = chrome.runtime.getURL('img/gradient_up.png');
 // Regexes.
 var DICT_LINK_REGEX = /^http:\/\/en\.wiktionary\.org\/wiki\/([^:]*)$/;
 var TITLE_CLASS_REGEX = RegExp('(^|\s)' +  ROOT_ID + '_title(\s|$)')
@@ -62,7 +62,7 @@ var options = {
 function initialize() {
   // Load options.
   function setOpt(opt) {
-    chrome.extension.sendRequest({method: 'retrieve', arg: opt}, function(response) {
+    chrome.runtime.sendMessage({method: 'retrieve', arg: opt}, function(response) {
       if (response != null) options[opt] = response;
     });
   }
@@ -76,7 +76,7 @@ function initialize() {
     link = document.createElement('link');
     link.rel = 'stylesheet';
     link.type = 'text/css';
-    link.href = chrome.extension.getURL('frame.css');
+    link.href = chrome.runtime.getURL('frame.css');
 
     document.body.appendChild(link);
   }
@@ -269,7 +269,7 @@ function createPopup(query, x, y, windowX, windowY, fixed) {
   makeMoveable(frame, PADDING_TOP);
 
   // Start loading frame data.
-  chrome.extension.sendRequest({method: 'lookup', arg: query}, function(response) {
+  chrome.runtime.sendMessage({method: 'lookup', arg: query}, function(response) {
     if (response != null) {
       var wrapper = document.createElement('div');
       wrapper.innerHTML = createHtmlFromLookup(query, response);
@@ -389,7 +389,7 @@ function registerAudioIcon(icon, filename) {
     if (audio_cache[filename]) {
       playAudio(audio_cache[filename], src_element);
     } else {
-      chrome.extension.sendRequest({method: 'get_audio', arg: filename}, function(url) {
+      chrome.runtime.sendMessage({method: 'get_audio', arg: filename}, function(url) {
         audio_cache[filename] = url;
         playAudio(url, src_element);
       });
@@ -690,7 +690,7 @@ function makeResizeable(container, handle) {
       content_box.style.height = new_height + 'px';
       if (options.saveFrameSize) {
         options.frameHeight = new_height;
-        chrome.extension.sendRequest({method: 'store', arg: 'frameHeight', arg2: new_height}, function(response) {});
+        chrome.runtime.sendMessage({method: 'store', arg: 'frameHeight', arg2: new_height}, function(response) {});
       }
     }
     if (moved.x > 0 || width >= 250) {
@@ -703,7 +703,7 @@ function makeResizeable(container, handle) {
 
       if (options.saveFrameSize) {
         options.frameWidth = new_width;
-        chrome.extension.sendRequest({method: 'store', arg: 'frameWidth', arg2: new_width}, function(response) {});
+        chrome.runtime.sendMessage({method: 'store', arg: 'frameWidth', arg2: new_width}, function(response) {});
       }
     }
 
