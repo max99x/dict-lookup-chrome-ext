@@ -1,6 +1,6 @@
 // API URLs.
 var DICT_API_URL = 'http://dictionary-lookup.org/%query%';
-var AUDIO_API_URL = 'http://commons.wikimedia.org/w/index.php?title=File:%file%&action=edit&externaledit=true&mode=file';
+var AUDIO_API_URL = 'https://en.wiktionary.org/wiki/File:%file%';
 
 // Helpers to store and access objects in local storage.
 Storage.prototype.setObject = function(key, value) {
@@ -74,13 +74,15 @@ chrome.extension.onMessage.addListener(function(request, sender, callback) {
     var url = AUDIO_API_URL.replace('%file%', request.arg);
 
     sendAjaxRequest(url, function(resp) {
-      var url_match = resp.match(/URL=(.+)/);
+      var url_match = resp.match(/<source src="([^"]+)" type="audio/);
       if (url_match && url_match.length == 2) {
         callback(url_match[1]);
       } else {
         callback('');
       }
     });
+    
+    return true; // Inform Chrome that we will make a delayed callback
   } else {
     // Invalid request method. Ignore it.
     callback('');
