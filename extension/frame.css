@@ -31,6 +31,9 @@
   list-style: none;
 
   -webkit-box-shadow: none;
+
+  -webkit-box-sizing: content-box !important;
+  box-sizing: content-box !important;
 }
 
 #chrome_ggl_dict_ext img {
