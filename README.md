@@ -56,6 +56,6 @@ to running the whole thing:
 5. Download and extract a Wiktionary dump, e.g. from:
    http://dumps.wikimedia.org/enwiktionary/latest/enwiktionary-latest-pages-articles.xml.bz2
 6. Adjust the database, dump path and URL settings in `wiktionary/__main__.py`.
-7. Run `wiktionary/__main__.py. This should execute the whole pipeline.
+7. Run `wiktionary/__main__.py`. This should execute the whole pipeline.
 8. If everything went right, the final database in the format used by the lookup
    server will be in `LOOKUP_DB` (as specified in `wiktionary/__main__.py`).
